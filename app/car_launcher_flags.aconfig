@@ -1,0 +1,23 @@
+package: "com.android.car.carlauncher"
+container: "system"
+
+flag {
+  name: "media_session_card"
+  namespace: "car_sys_exp"
+  description: "This flag controls whether the media card uses media sessions"
+  bug: "323250843"
+}
+
+flag {
+  name: "media_card_fullscreen"
+  namespace: "car_sys_exp"
+  description: "This flag controls Media widget redesign"
+  bug: "310686518"
+}
+
+flag {
+  name: "tos_restrictions_enabled"
+  namespace: "car_sys_exp"
+  description: "This flag controls the terms of service restriction experience"
+  bug: "369672428"
+}

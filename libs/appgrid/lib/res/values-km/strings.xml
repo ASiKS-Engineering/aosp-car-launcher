@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+    Copyright (C) 2018 The Android Open Source Project
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+  -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="reset_appgrid_title" msgid="6491348358859198288">"កំណត់ក្រឡាកម្មវិធីឡើងវិញទៅជាលំដាប់ A-Z"</string>
+    <string name="reset_appgrid_dialogue_message" msgid="2278301828239327586">"មុខងារនេះនឹងដកការបញ្ជាទិញផ្ទាល់ខ្លួនទាំងអស់ចេញ។ តើ​អ្នក​ចង់​បន្ត​ដែរ​ឬ​ទេ?"</string>
+    <string name="app_launcher_title_all_apps" msgid="3522783138519460233">"កម្មវិធី​ទាំងអស់"</string>
+    <string name="app_launcher_title_media_only" msgid="7194631822174015710">"កម្មវិធីមេឌៀ"</string>
+    <string name="app_launcher_stop_app_cant_stop_text" msgid="6513703446595313338">"មិនអាច​បញ្ឈប់កម្មវិធី​បានទេ។"</string>
+    <string name="hide_debug_apps" msgid="7140064693464751647">"លាក់កម្មវិធីជួសជុល"</string>
+    <string name="show_debug_apps" msgid="2748157232151197494">"បង្ហាញកម្មវិធីជួសជុល"</string>
+    <string name="banner_title_text" msgid="8827498256184464356">"ដើម្បីប្រើកម្មវិធី​ដែលបានបិទដោយ​លក្ខខណ្ឌប្រើប្រាស់​សម្រាប់អ្នកប្រើប្រាស់ សូមយល់ព្រមតាម​លក្ខខណ្ឌប្រើប្រាស់​សម្រាប់អ្នកប្រើប្រាស់"</string>
+    <string name="banner_review_button_text" msgid="369410598918950148">"ពិនិត្យមើល"</string>
+    <string name="banner_dismiss_button_text" msgid="5389352614429069562">"កុំទាន់"</string>
+</resources>

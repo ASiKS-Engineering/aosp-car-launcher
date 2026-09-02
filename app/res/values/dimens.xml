@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (c) 2018 The Android Open Source Project
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<resources>
+    <!-- Vertical percentage of screen (not occupied by maps to devote to the contextual space
+      (Ex: date time temp) -->
+    <item name="contextual_screen_percentage" type="dimen" format="float">.6</item>
+
+    <!--Used for the space between the top, and bottom of the screen and the content -->
+    <dimen name="vertical_border_size">@*android:dimen/car_padding_1</dimen>
+    <!-- Used for the space between the start, and end of the screen and the content -->
+    <dimen name="horizontal_border_size">@*android:dimen/car_padding_1</dimen>
+    <!-- Margin surrounding fragments on the main activity -->
+    <dimen name="main_screen_widget_margin">16dp</dimen>
+
+    <!-- Card dimensions -->
+    <dimen name="card_width">400dp</dimen>
+
+    <!-- Card Header dimensions -->
+    <dimen name="card_content_margin">24dp</dimen>
+    <dimen name="card_icon_size">36dp</dimen>
+    <dimen name="card_name_margin_start">16dp</dimen>
+
+    <!-- Card Content dimensions -->
+    <dimen name="media_top_margin">24dp</dimen>
+    <dimen name="descriptive_text_only_top_margin">32dp</dimen>
+    <dimen name="descriptive_text_with_controls_top_margin">24dp</dimen>
+    <!-- Percent transparency of the scrim applied to the image used for the card's background as a float between 0 and 1, where 0 applies no darkening scrim-->
+    <dimen name="card_background_scrim_alpha" format="float">0.72</dimen>
+    <!--Blur radius for the RenderEffect for the card's background image as a float, where 0 is not blurred -->
+    <dimen name="card_background_image_blur_radius" format="float">25</dimen>
+
+    <!-- card_content_descriptive_text dimensions -->
+    <dimen name="card_content_image_size">76dp</dimen>
+    <dimen name="card_content_image_margin">16dp</dimen>
+    <dimen name="descriptive_text_margin_top">8dp</dimen>
+    <dimen name="secondary_text_margin_top">0dp</dimen>
+
+    <!-- card_content_text_block dimensions -->
+    <dimen name="text_block_top_margin">24dp</dimen>
+
+    <!-- card_content_button_trio dimensions -->
+    <dimen name="home_card_button_size">44dp</dimen>
+    <dimen name="button_outline_thickness">4dp</dimen>
+    <dimen name="button_tap_target_size">76dp</dimen>
+    <dimen name="button_tap_target_icon_padding">8dp</dimen>
+    <dimen name="button_trio_margin">24dp</dimen>
+
+    <!-- card_content_playback_controls dimensions -->
+    <dimen name="playback_controls_margin">24dp</dimen>
+
+    <!-- card_content_tap_for_more dimensions -->
+    <dimen name="tap_text_margin">24dp</dimen>
+
+    <dimen name="control_bar_padding">0dp</dimen>
+
+    <!-- Recent task -->
+    <dimen name="recent_task_icon_size">48dp</dimen>
+    <dimen name="recent_task_dismiss_button_size">@dimen/recent_task_icon_size</dimen>
+    <dimen name="recent_task_col_space">64dp</dimen>
+    <!-- The fraction that a recent task should move(from its original position) to
+         be considered as swiped -->
+    <item name="recent_task_swiped_threshold" type="dimen" format="float">0.3</item>
+    <!-- Pixel value by with a recent task should move(from its original position) to
+         start a swipe gesture. If the gesture has a smaller change, the gesture is forwarded to
+         other handlers. -->
+    <item name="recent_task_start_swipe_threshold" type="dimen" format="float">5</item>
+    <item name="disabled_recent_task_alpha" type="dimen" format="float">0.35</item>
+    <!--  task width can be calculated using the following formula:
+      available height of thumbnail * width of screen / height of screen between the insets
+      This will allow most task thumbnails to be displayed without cropping. -->
+    <dimen name="recent_task_width_first">1036dp</dimen>
+    <dimen name="recent_task_width">432dp</dimen>
+
+    <!-- Calm mode sizes -->
+    <dimen name="calm_mode_padding_vertical">40dp</dimen>
+    <dimen name="calm_mode_padding_horizontal">12dp</dimen>
+    <dimen name="calm_mode_icon_size_regular">32dp</dimen>
+    <dimen name="calm_mode_icon_size_small">16dp</dimen>
+    <dimen name="calm_mode_icon_margin">24dp</dimen>
+    <dimen name="calm_mode_text_size">24sp</dimen>
+    <dimen name="calm_mode_clock_translationY">40dp</dimen>
+    <dimen name="calm_mode_clock_media_title_margin">-16dp</dimen>
+
+    <!-- Home fullscreen media card dimens -->
+    <dimen name="media_card_large_button_icon_padding">25dp</dimen>
+    <dimen name="media_card_panel_button_icon_padding">12dp</dimen>
+    <dimen name="media_card_app_icon_size">32dp</dimen>
+    <dimen name="media_card_horizontal_margin">32dp</dimen>
+    <dimen name="media_card_view_separation_margin">16dp</dimen>
+    <dimen name="media_card_artist_top_margin">4dp</dimen>
+    <dimen name="media_card_album_art_size">200dp</dimen>
+    <dimen name="media_card_album_art_end_margin">96dp</dimen>
+    <dimen name="media_card_logo_size">32dp</dimen>
+    <dimen name="media_card_small_button_size">40dp</dimen>
+    <dimen name="media_card_large_button_size">80dp</dimen>
+    <dimen name="media_card_bottom_panel_button_size">56dp</dimen>
+    <dimen name="media_card_bottom_panel_height">96dp</dimen>
+    <dimen name="media_card_play_button_bottom_margin">120dp</dimen>
+    <dimen name="media_card_play_button_horizontal_margin">8dp</dimen>
+    <dimen name="media_card_margin_panel_open">24dp</dimen>
+    <dimen name="media_card_bottom_panel_margin_top">208dp</dimen>
+    <dimen name="media_card_bottom_panel_animated_final_position">128dp</dimen>
+    <dimen name="media_card_panel_handlebar_offscreen_start_position">1000dp</dimen>
+    <dimen name="media_card_bottom_panel_animated_size">@dimen/media_card_bottom_panel_button_size</dimen>
+    <dimen name="media_card_bottom_panel_animated_horizontal_margin">0dp</dimen>
+    <dimen name="media_card_panel_handlebar_height">8dp</dimen>
+    <dimen name="media_card_panel_handlebar_touch_target_height">60dp</dimen>
+    <dimen name="media_card_panel_handlebar_horizontal_padding">164dp</dimen>
+    <dimen name="media_card_queue_header_app_icon_size">26dp</dimen>
+    <dimen name="media_card_queue_item_thumbnail_size">80dp</dimen>
+    <dimen name="media_card_panel_content_margin_top">216dp</dimen>
+    <dimen name="media_card_title_animated_text_size">28sp</dimen>
+    <dimen name="media_card_title_default_text_size">32sp</dimen>
+    <dimen name="media_card_recycler_view_fading_edge_length">80dp</dimen>
+    <dimen name="media_card_history_item_height">112dp</dimen>
+    <dimen name="media_card_history_item_vertical_margin">16dp</dimen>
+    <dimen name="media_card_history_item_icon_size">80dp</dimen>
+    <dimen name="media_card_history_item_thumbnail_size">32dp</dimen>
+    <dimen name="media_card_view_header_icon_size">32dp</dimen>
+    <dimen name="media_card_text_view_guideline_start">248dp</dimen>
+
+    <dimen name="widget_media_card_size">490dp</dimen>
+    <dimen name="widget_width">384dp</dimen>
+    <dimen name="widget_height">276dp</dimen>
+    <dimen name="date_widget_padding">16dp</dimen>
+    <dimen name="date_widget_icon_margin_end">16dp</dimen>
+    <dimen name="date_widget_icon_side">48dp</dimen>
+    <dimen name="widget_divider_size">@dimen/main_screen_widget_margin</dimen>
+    <dimen name="widget_vertical_margin">0dp</dimen>
+    <dimen name="widget_horizontal_margin">@dimen/main_screen_widget_margin</dimen>
+    <item name="widget_scale_factor" type="dimen" format="float">1.5</item>
+
+    <!-- Control bar dimens -->
+    <dimen name="control_bar_height">411dp</dimen>
+    <dimen name="control_bar_media_card_radius">48dp</dimen>
+    <dimen name="control_bar_media_card_padding">32dp</dimen>
+    <dimen name="control_bar_media_card_view_end_margin">48dp</dimen>
+    <dimen name="control_bar_media_card_icon_size">48dp</dimen>
+    <dimen name="control_bar_media_card_custom_action_spacing">72dp</dimen>
+    <dimen name="control_bar_media_card_custom_action_size">40dp</dimen>
+    <dimen name="control_bar_media_card_seek_bar_height">56dp</dimen>
+    <dimen name="control_bar_media_card_view_separation_margin">32dp</dimen>
+    <dimen name="control_bar_media_card_half_pill_button_width">120dp</dimen>
+    <dimen name="control_bar_media_card_pill_button_width">160dp</dimen>
+    <dimen name="control_bar_media_card_app_icon_size">26dp</dimen>
+    <dimen name="control_bar_media_card_album_art_size">200dp</dimen>
+    <dimen name="control_bar_media_card_custom_action_layout_horizontal_padding">38dp</dimen>
+    <dimen name="control_bar_media_card_queue_item_thumbnail_size">112dp</dimen>
+    <dimen name="control_bar_media_card_queue_margin">24dp</dimen>
+    <dimen name="control_bar_media_card_queue_item_card_width">320dp</dimen>
+    <dimen name="control_bar_media_card_title_height">56dp</dimen>
+    <dimen name="control_bar_media_card_title_default_text_size">44sp</dimen>
+    <dimen name="control_bar_media_card_title_animation_height">40dp</dimen>
+    <dimen name="control_bar_media_card_history_main_icon_size">112dp</dimen>
+    <dimen name="control_bar_media_card_history_title_size">145dp</dimen>
+    <dimen name="control_bar_media_card_history_subtitle_size">128dp</dimen>
+    <dimen name="control_bar_media_card_history_thumbnail_size">30dp</dimen>
+    <dimen name="control_bar_media_card_history_item_margin_small">12dp</dimen>
+    <dimen name="control_bar_media_card_history_item_margin_large">24dp</dimen>
+    <dimen name="control_bar_media_card_history_item_width_active">316dp</dimen>
+    <dimen name="control_bar_media_card_history_item_width_inactive">220dp</dimen>
+    <dimen name="control_bar_media_card_subtitle_top_margin">8dp</dimen>
+    <dimen name="control_bar_media_card_playback_button_icon_padding">20dp</dimen>
+
+    <dimen name="car_panel_border_width">3dp</dimen>
+</resources>
