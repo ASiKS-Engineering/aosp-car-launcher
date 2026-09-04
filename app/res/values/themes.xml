@@ -20,6 +20,8 @@
         <item name="textAppearanceGridItem">@android:style/TextAppearance.DeviceDefault.Medium</item>
         <item name="textAppearanceGridItemSecondary">@android:style/TextAppearance.DeviceDefault.Small</item>
         <item name="oemTokenOverrideEnabled">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 
     <style name="Theme.ControlBar" parent="Theme.CarUi.NoToolbar">
