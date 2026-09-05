@@ -34,6 +34,10 @@ public class CarLauncherUtils {
 
     private static final String TAG = "CarLauncherUtils";
     private static final String ACTION_APP_GRID = "com.android.car.carlauncher.ACTION_APP_GRID";
+    public static final String ACTION_MAPS_VISIBILITY_CHANGED =
+        "com.android.car.carlauncher.action.MAPS_VISIBILITY_CHANGED";
+    public static final String EXTRA_MAPS_VISIBLE =
+        "com.android.car.carlauncher.extra.MAPS_VISIBLE";
 
     private CarLauncherUtils() {
     }
@@ -70,6 +74,20 @@ public class CarLauncherUtils {
             }
         }
         return maybeReplaceWithTosMapIntent(context, defaultIntent);
+    }
+
+    /** Notifies the selected maps app whether it is being shown full screen. */
+    public static void notifyMapsVisibility(Context context, boolean visible) {
+        Intent mapsIntent = getMapsIntent(context);
+        ComponentName component = mapsIntent.getComponent();
+        if (component == null) {
+            return;
+        }
+
+        Intent visibilityIntent = new Intent(ACTION_MAPS_VISIBILITY_CHANGED)
+                .setPackage(component.getPackageName())
+                .putExtra(EXTRA_MAPS_VISIBLE, visible);
+        context.sendBroadcast(visibilityIntent);
     }
 
     /**

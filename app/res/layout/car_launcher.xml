@@ -29,6 +29,8 @@
         style="@style/CardViewStyle"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="0dp"
         android:layoutDirection="locale"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"

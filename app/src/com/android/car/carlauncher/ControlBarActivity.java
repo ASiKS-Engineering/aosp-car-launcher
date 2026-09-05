@@ -17,6 +17,7 @@
 package com.android.car.carlauncher;
 
 import android.app.ActivityOptions;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
@@ -65,6 +66,8 @@ public class ControlBarActivity extends FragmentActivity {
         getTheme().applyStyle(R.style.CarLauncherActivityThemeOverlay, true);
 
         setContentView(R.layout.control_bar_container);
+        findViewById(R.id.navigation_button).setOnClickListener(view -> openNavigation());
+        findViewById(R.id.home_button).setOnClickListener(view -> openHome());
         initializeCards();
 
         MediaLaunchRouter.getInstance().registerMediaLaunchHandler(mMediaMediaLaunchHandler);
@@ -110,5 +113,20 @@ public class ControlBarActivity extends FragmentActivity {
             transaction.replace(cardModule.getCardResId(), cardModule.getCardView().getFragment());
         }
         transaction.commitNow();
+    }
+
+    private void openNavigation() {
+        CarLauncherUtils.notifyMapsVisibility(this, /* visible= */ true);
+        Intent mapsIntent = CarLauncherUtils.getMapsIntent(this);
+        mapsIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(mapsIntent);
+    }
+
+    private void openHome() {
+        CarLauncherUtils.notifyMapsVisibility(this, /* visible= */ false);
+        Intent homeIntent = new Intent(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_HOME)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(homeIntent);
     }
 }

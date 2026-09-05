@@ -14,17 +14,42 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:background="@drawable/control_bar_background"
-    android:gravity="top"
-    android:id="@+id/control_bar_area"
-    android:layout_gravity="bottom"
-    android:layout_height="match_parent"
-    android:layout_width="match_parent"
-    android:orientation="vertical">
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
     <FrameLayout
         android:id="@+id/bottom_card"
         android:layout_height="match_parent"
         android:layout_width="match_parent" />
-</LinearLayout>
+
+  <LinearLayout
+    android:id="@+id/navigation_controls"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center|bottom"
+    android:layout_marginBottom="@dimen/control_bar_navigation_margin_bottom"
+    android:background="@drawable/control_bar_navigation_background"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:paddingHorizontal="@dimen/control_bar_navigation_padding">
+
+    <ImageButton
+      android:id="@+id/navigation_button"
+      android:layout_width="@dimen/button_tap_target_size"
+      android:layout_height="@dimen/button_tap_target_size"
+      android:background="@drawable/car_button_background"
+      android:contentDescription="@string/navigation_button_content_description"
+      android:padding="@dimen/button_tap_target_icon_padding"
+      android:src="@drawable/ic_navigation" />
+
+    <ImageButton
+      android:id="@+id/home_button"
+      android:layout_width="@dimen/button_tap_target_size"
+      android:layout_height="@dimen/button_tap_target_size"
+      android:background="@drawable/car_button_background"
+      android:contentDescription="@string/home_button_content_description"
+      android:padding="@dimen/button_tap_target_icon_padding"
+      android:src="@drawable/ic_launcher_home" />
+  </LinearLayout>
+</FrameLayout>
