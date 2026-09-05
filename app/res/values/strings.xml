@@ -18,6 +18,7 @@
     <string name="app_title">Car Launcher</string>
     <string name="navigation_button_content_description">Navigation</string>
     <string name="home_button_content_description">Home</string>
+    <string name="navigation_starting">Navigation wird gestartet...</string>
 
     <string name="default_media_song_title"></string>
 

@@ -332,7 +332,6 @@ public class WidgetHostActivity extends AppCompatActivity {
         mNavigationHandler.removeCallbacksAndMessages(null);
         hideNavigationLoading();
         CarLauncherUtils.notifyMapsVisibility(this, /* visible= */ true);
-        startActivity(CarLauncherUtils.getCamperNavigatorIntent(this));
     }
 
     private void showNavigationLoading() {

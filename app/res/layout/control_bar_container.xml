@@ -24,34 +24,59 @@
         android:layout_height="match_parent"
         android:layout_width="match_parent" />
 
-      <LinearLayout
+      <FrameLayout
         android:id="@+id/navigation_controls"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center|bottom"
-        android:layout_marginBottom="@dimen/control_bar_navigation_margin_bottom"
-        android:background="@drawable/control_bar_navigation_background"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:paddingHorizontal="@dimen/control_bar_navigation_padding">
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="@dimen/control_bar_navigation_margin_bottom">
 
         <ImageButton
           android:id="@+id/navigation_button"
-          android:layout_width="@dimen/button_tap_target_size"
-          android:layout_height="@dimen/button_tap_target_size"
+          android:layout_width="@dimen/control_bar_media_card_custom_action_size"
+          android:layout_height="@dimen/control_bar_media_card_custom_action_size"
           android:background="@drawable/car_button_background"
+          android:layout_gravity="center_vertical|start"
+          android:layout_marginStart="@dimen/control_bar_navigation_padding"
           android:contentDescription="@string/navigation_button_content_description"
           android:padding="@dimen/button_tap_target_icon_padding"
           android:src="@drawable/ic_navigation" />
 
         <ImageButton
           android:id="@+id/home_button"
-          android:layout_width="@dimen/button_tap_target_size"
-          android:layout_height="@dimen/button_tap_target_size"
+          android:layout_width="@dimen/control_bar_media_card_custom_action_size"
+          android:layout_height="@dimen/control_bar_media_card_custom_action_size"
           android:background="@drawable/car_button_background"
+          android:layout_gravity="center"
           android:contentDescription="@string/home_button_content_description"
           android:padding="@dimen/button_tap_target_icon_padding"
-          android:src="@drawable/ic_launcher_home" />
+            android:src="@drawable/ic_home" />
+      </FrameLayout>
+
+      <LinearLayout
+        android:id="@+id/navigation_loading_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/navigation_starting"
+          android:textColor="@android:color/white"
+          android:textSize="20sp" />
+
+        <ProgressBar
+          android:layout_width="240dp"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="16dp"
+          android:indeterminate="true"
+          style="?android:attr/progressBarStyleHorizontal" />
       </LinearLayout>
 
     </FrameLayout>

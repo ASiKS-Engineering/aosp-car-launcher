@@ -52,7 +52,7 @@ public class CarLauncherUtils {
         return new Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_APP_MAPS)
                 .setComponent(component)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
     }
 
     public static boolean isCamperNavigatorAvailable(Context context) {
@@ -62,6 +62,10 @@ public class CarLauncherUtils {
 
     /** Intent used to find/launch the maps activity to run in the relevant DisplayArea. */
     public static Intent getMapsIntent(Context context) {
+        if (isCamperNavigatorAvailable(context)) {
+            return maybeReplaceWithTosMapIntent(context, getCamperNavigatorIntent(context));
+        }
+
         Intent defaultIntent = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_MAPS);
         defaultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PackageManager pm = context.getPackageManager();
