@@ -18,8 +18,12 @@ package com.android.car.carlauncher;
 
 import android.app.ActivityOptions;
 import android.content.Intent;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 
@@ -42,8 +46,22 @@ import java.util.Set;
 public class ControlBarActivity extends FragmentActivity {
     private static final String TAG = "ControlBarActivity";
     private static final boolean DEBUG = false;
+    private static final long NAVIGATION_WAIT_TIMEOUT_MS = 30_000;
 
     private Set<HomeCardModule> mHomeCardModules;
+    private final Handler mNavigationHandler = new Handler(Looper.getMainLooper());
+    private View mNavigationLoadingOverlay;
+    private final BroadcastReceiver mPackageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(android.content.Context context, Intent intent) {
+            if (Intent.ACTION_PACKAGE_ADDED.equals(intent.getAction())
+                    && intent.getData() != null
+                    && "com.example.campernavigator".equals(intent.getData().getSchemeSpecificPart())
+                    && mNavigationLoadingOverlay.getVisibility() == View.VISIBLE) {
+                startCamperNavigator();
+            }
+        }
+    };
 
     private final IntentHandler mIntentHandler = intent -> {
         if (intent != null) {
@@ -66,8 +84,12 @@ public class ControlBarActivity extends FragmentActivity {
         getTheme().applyStyle(R.style.CarLauncherActivityThemeOverlay, true);
 
         setContentView(R.layout.control_bar_container);
+        mNavigationLoadingOverlay = findViewById(R.id.navigation_loading_overlay);
         findViewById(R.id.navigation_button).setOnClickListener(view -> openNavigation());
         findViewById(R.id.home_button).setOnClickListener(view -> openHome());
+        IntentFilter packageFilter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
+        packageFilter.addDataScheme("package");
+        registerReceiver(mPackageReceiver, packageFilter);
         initializeCards();
 
         MediaLaunchRouter.getInstance().registerMediaLaunchHandler(mMediaMediaLaunchHandler);
@@ -116,17 +138,44 @@ public class ControlBarActivity extends FragmentActivity {
     }
 
     private void openNavigation() {
-        CarLauncherUtils.notifyMapsVisibility(this, /* visible= */ true);
-        Intent mapsIntent = CarLauncherUtils.getMapsIntent(this);
-        mapsIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(mapsIntent);
+        showNavigationLoading();
+        if (CarLauncherUtils.isCamperNavigatorAvailable(this)) {
+            startCamperNavigator();
+        } else {
+            mNavigationHandler.postDelayed(this::hideNavigationLoading,
+                    NAVIGATION_WAIT_TIMEOUT_MS);
+        }
     }
 
     private void openHome() {
+        hideNavigationLoading();
         CarLauncherUtils.notifyMapsVisibility(this, /* visible= */ false);
         Intent homeIntent = new Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_HOME)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(homeIntent);
+    }
+
+    private void startCamperNavigator() {
+        mNavigationHandler.removeCallbacksAndMessages(null);
+        hideNavigationLoading();
+        CarLauncherUtils.notifyMapsVisibility(this, /* visible= */ true);
+        startActivity(CarLauncherUtils.getCamperNavigatorIntent(this));
+    }
+
+    private void showNavigationLoading() {
+        mNavigationLoadingOverlay.setVisibility(View.VISIBLE);
+    }
+
+    private void hideNavigationLoading() {
+        mNavigationHandler.removeCallbacksAndMessages(null);
+        mNavigationLoadingOverlay.setVisibility(View.GONE);
+    }
+
+    @Override
+    protected void onDestroy() {
+        mNavigationHandler.removeCallbacksAndMessages(null);
+        unregisterReceiver(mPackageReceiver);
+        super.onDestroy();
     }
 }
