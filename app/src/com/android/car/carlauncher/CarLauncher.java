@@ -87,6 +87,7 @@ public class CarLauncher extends FragmentActivity {
     private boolean mIsReadyLogged;
     private boolean mUseSmallCanvasOptimizedMap;
     private ViewGroup mMapsCard;
+    private View mMapsPlaceholder;
 
     @VisibleForTesting
     CarLauncherViewModel mCarLauncherViewModel;
@@ -185,6 +186,7 @@ public class CarLauncher extends FragmentActivity {
                 // We don't want to show Map card unnecessarily for the headless user 0
                 if (!UserHelperLite.isHeadlessSystemUser(getUserId())) {
                     mMapsCard = findViewById(R.id.maps_card);
+                    mMapsPlaceholder = findViewById(R.id.maps_placeholder_text);
                     if (mMapsCard != null) {
                         setupRemoteCarTaskView(mMapsCard);
                         setupContentObserversForTos();
@@ -219,17 +221,30 @@ public class CarLauncher extends FragmentActivity {
 
     private void setUpRemoteCarTaskViewObserver(ViewGroup parent) {
         mCarLauncherViewModel.getRemoteCarTaskView().observe(this, taskView -> {
-            if (taskView == null || taskView.getParent() == parent) {
-                // Discard if the parent is still the same because it doesn't signify a config
-                // change.
+            if (taskView == null) {
+                if (mMapsPlaceholder != null) mMapsPlaceholder.setVisibility(View.VISIBLE);
                 return;
             }
+            
+            if (taskView.getParent() == parent) {
+                return;
+            }
+            
             if (taskView.getParent() != null) {
-                // Discard the previous parent as its invalid now.
                 ((ViewGroup) taskView.getParent()).removeView(taskView);
             }
-            parent.removeAllViews(); // Just a defense against a dirty parent.
-            parent.addView(taskView);
+            
+            // Container finden (unser FrameLayout)
+            ViewGroup container = findViewById(R.id.maps_card_container);
+            if (container != null) {
+                container.addView(taskView, 0); // Karte hinter den Text legen
+                
+                // Sobald die Karte da ist, Text ausblenden (wird später via onTaskAppeared präzisiert)
+                if (mMapsPlaceholder != null) mMapsPlaceholder.setVisibility(View.GONE);
+            } else {
+                parent.removeAllViews();
+                parent.addView(taskView);
+            }
         });
     }
 

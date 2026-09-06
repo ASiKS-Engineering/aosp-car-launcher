@@ -207,6 +207,9 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
                 Log.d(TAG, "MapsTaskView: onTaskVanished: taskId=" + taskInfo.taskId);
             }
             if (sAutoRestartOnCrash) {
+                // RemoteCarTaskView color is set to transparent to keep showing the placeholder
+                mRemoteCarTaskView.getValue().setBackgroundColor(Color.TRANSPARENT);
+
                 // Try to restart the activity after a short delay
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     if (mRemoteCarTaskView.getValue() != null) {
