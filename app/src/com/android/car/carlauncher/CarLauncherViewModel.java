@@ -38,6 +38,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.core.util.Consumer;
@@ -166,7 +168,7 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
         }
     };
 
-    private static final class ControlledRemoteCarTaskViewCallbackImpl implements
+    private final class ControlledRemoteCarTaskViewCallbackImpl implements
             ControlledRemoteCarTaskViewCallback {
         private final MutableLiveData<RemoteCarTaskView> mRemoteCarTaskView;
 
