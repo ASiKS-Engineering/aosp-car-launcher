@@ -251,6 +251,7 @@ public class CarLauncher extends FragmentActivity {
         super.onResume();
 
         maybeLogReady();
+        Log.i(TAG, "Home Screen resumed: notifying maps visibility = false");
         CarLauncherUtils.notifyMapsVisibility(this, /* visible= */ false);
     }
 

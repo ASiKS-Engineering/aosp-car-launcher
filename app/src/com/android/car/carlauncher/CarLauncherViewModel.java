@@ -182,6 +182,7 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
             if (DEBUG) {
                 Log.d(TAG, "MapsTaskView: onTaskViewCreated");
             }
+            taskView.setBackgroundColor(Color.TRANSPARENT);
             mRemoteCarTaskView.setValue(taskView);
         }
 
