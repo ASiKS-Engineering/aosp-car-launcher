@@ -16,42 +16,176 @@
   -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent">
 
     <FrameLayout
         android:id="@+id/bottom_card"
-        android:layout_height="match_parent"
-        android:layout_width="match_parent" />
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-      <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/navigation_controls"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="80dp"
         android:layout_gravity="bottom"
-        android:layout_marginBottom="@dimen/control_bar_navigation_margin_bottom">
+        android:background="@drawable/control_bar_background">
 
-        <ImageButton
-          android:id="@+id/navigation_button"
-          android:layout_width="@dimen/control_bar_media_card_custom_action_size"
-          android:layout_height="@dimen/control_bar_media_card_custom_action_size"
-          android:background="@drawable/car_button_background"
-          android:layout_gravity="center_vertical|start"
-          android:layout_marginStart="@dimen/control_bar_navigation_padding"
-          android:contentDescription="@string/navigation_button_content_description"
-          android:padding="@dimen/button_tap_target_icon_padding"
-          android:src="@drawable/ic_navigation" />
+        <!-- HVAC LEFT -->
+        <LinearLayout
+            android:id="@+id/hvac_left"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingLeft="24dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
 
-        <ImageButton
-          android:id="@+id/home_button"
-          android:layout_width="@dimen/control_bar_media_card_custom_action_size"
-          android:layout_height="@dimen/control_bar_media_card_custom_action_size"
-          android:background="@drawable/car_button_background"
-          android:layout_gravity="center"
-          android:contentDescription="@string/home_button_content_description"
-          android:padding="@dimen/button_tap_target_icon_padding"
-            android:src="@drawable/ic_home" />
-      </FrameLayout>
+            <ImageButton
+                android:id="@+id/temp_left_minus"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_minus"
+                android:tint="@android:color/white" />
+
+            <TextView
+                android:id="@+id/temp_left_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="21.5°"
+                android:textColor="@android:color/white"
+                android:textSize="24sp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp" />
+
+            <ImageButton
+                android:id="@+id/temp_left_plus"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_plus"
+                android:tint="@android:color/white" />
+        </LinearLayout>
+
+        <!-- CENTER MENU -->
+        <LinearLayout
+            android:id="@+id/center_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center"
+            app:layout_constraintStart_toEndOf="@id/hvac_left"
+            app:layout_constraintEnd_toStartOf="@id/hvac_right"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <ImageButton
+                android:id="@+id/btn_media"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_media"
+                app:tint="@android:color/white"
+                android:padding="16dp"
+                android:scaleType="fitCenter"/>
+
+            <ImageButton
+                android:id="@+id/navigation_button"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_navigation"
+                app:tint="@android:color/white"
+                android:padding="16dp"
+                android:scaleType="fitCenter"/>
+
+            <ImageButton
+                android:id="@+id/btn_fan"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_fan"
+                app:tint="@android:color/white"
+                android:padding="16dp"
+                android:scaleType="fitCenter"/>
+
+            <ImageButton
+                android:id="@+id/home_button"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:background="@drawable/car_button_background"
+                android:src="@drawable/ic_home"
+                app:tint="@android:color/white"
+                android:padding="12dp"
+                android:scaleType="fitCenter"/>
+
+            <ImageButton
+                android:id="@+id/btn_apps"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_apps"
+                app:tint="@android:color/white"
+                android:padding="16dp"
+                android:scaleType="fitCenter"/>
+
+            <ImageButton
+                android:id="@+id/btn_phone"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_phone"
+                app:tint="@android:color/white"
+                android:padding="16dp"
+                android:scaleType="fitCenter"/>
+        </LinearLayout>
+
+        <!-- HVAC RIGHT -->
+        <LinearLayout
+            android:id="@+id/hvac_right"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingRight="24dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <ImageButton
+                android:id="@+id/temp_right_minus"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_minus"
+                android:tint="@android:color/white" />
+
+            <TextView
+                android:id="@+id/temp_right_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="21.5°"
+                android:textColor="@android:color/white"
+                android:textSize="24sp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp" />
+
+            <ImageButton
+                android:id="@+id/temp_right_plus"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_plus"
+                android:tint="@android:color/white" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
       <LinearLayout
         android:id="@+id/navigation_loading_overlay"

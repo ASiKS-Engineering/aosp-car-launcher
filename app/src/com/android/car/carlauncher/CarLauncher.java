@@ -109,9 +109,9 @@ public class CarLauncher extends FragmentActivity {
             if (!mUseSmallCanvasOptimizedMap
                     && !homeTaskVisible
                     && getTaskViewTaskId() == task.taskId) {
-                // The embedded map component received an intent, therefore forcibly bringing the
-                // launcher to the foreground.
-                bringToForeground();
+                // NOTE: We commented this out to allow the Navi app to break out of TaskView
+                // when the user explicitly clicks the Navigation button in the control bar.
+                // bringToForeground();
             }
         }
     };
@@ -237,13 +237,11 @@ public class CarLauncher extends FragmentActivity {
             // Container finden (unser FrameLayout)
             ViewGroup container = findViewById(R.id.maps_card_container);
             if (container != null) {
-                container.addView(taskView, 0); // Karte hinter den Text legen
-                
-                // Sobald die Karte da ist, Text ausblenden (wird später via onTaskAppeared präzisiert)
+                if (taskView.getParent() != null) {
+                    ((ViewGroup) taskView.getParent()).removeView(taskView);
+                }
+                container.addView(taskView, 0); 
                 if (mMapsPlaceholder != null) mMapsPlaceholder.setVisibility(View.GONE);
-            } else {
-                parent.removeAllViews();
-                parent.addView(taskView);
             }
         });
     }

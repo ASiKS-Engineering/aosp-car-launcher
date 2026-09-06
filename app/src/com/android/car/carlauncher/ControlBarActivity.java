@@ -85,8 +85,39 @@ public class ControlBarActivity extends FragmentActivity {
 
         setContentView(R.layout.control_bar_container);
         mNavigationLoadingOverlay = findViewById(R.id.navigation_loading_overlay);
+        
         findViewById(R.id.navigation_button).setOnClickListener(view -> openNavigation());
         findViewById(R.id.home_button).setOnClickListener(view -> openHome());
+        
+        // Additional buttons from the new design
+        View btnMedia = findViewById(R.id.btn_media);
+        if (btnMedia != null) {
+            btnMedia.setOnClickListener(view -> {
+                Intent intent = new Intent(Intent.ACTION_MAIN);
+                intent.addCategory(Intent.CATEGORY_APP_MUSIC);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            });
+        }
+
+        View btnApps = findViewById(R.id.btn_apps);
+        if (btnApps != null) {
+            btnApps.setOnClickListener(view -> {
+                Intent intent = new Intent(this, AppGridActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            });
+        }
+
+        View btnPhone = findViewById(R.id.btn_phone);
+        if (btnPhone != null) {
+            btnPhone.setOnClickListener(view -> {
+                Intent intent = new Intent(Intent.ACTION_DIAL);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            });
+        }
+
         IntentFilter packageFilter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
         packageFilter.addDataScheme("package");
         registerReceiver(mPackageReceiver, packageFilter);
@@ -162,7 +193,10 @@ public class ControlBarActivity extends FragmentActivity {
         CarLauncherUtils.notifyMapsVisibility(this, /* visible= */ true);
         
         Intent intent = CarLauncherUtils.getCamperNavigatorIntent(this);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        // FORCE the activity to the top, breaking out of any embedding.
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK 
+                      | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT 
+                      | Intent.FLAG_ACTIVITY_NO_ANIMATION);
         startActivity(intent);
     }
 

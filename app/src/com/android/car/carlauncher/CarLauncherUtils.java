@@ -62,8 +62,9 @@ public class CarLauncherUtils {
 
     /** Intent used to find/launch the maps activity to run in the relevant DisplayArea. */
     public static Intent getMapsIntent(Context context) {
+        // ALWAYS prioritize CamperNavigator if it is configured
         if (isCamperNavigatorAvailable(context)) {
-            return maybeReplaceWithTosMapIntent(context, getCamperNavigatorIntent(context));
+            return getCamperNavigatorIntent(context);
         }
 
         Intent defaultIntent = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_MAPS);
