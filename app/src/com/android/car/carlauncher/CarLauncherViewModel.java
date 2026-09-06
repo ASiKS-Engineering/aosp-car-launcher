@@ -197,9 +197,8 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
             if (DEBUG) {
                 Log.d(TAG, "MapsTaskView: onTaskAppeared: taskId=" + taskInfo.taskId);
             }
-            if (!sAutoRestartOnCrash) {
-                mRemoteCarTaskView.getValue().setBackgroundColor(Color.TRANSPARENT);
-            }
+            // Always set transparent background when task is active to show the map
+            mRemoteCarTaskView.getValue().setBackgroundColor(Color.TRANSPARENT);
         }
 
         @Override
