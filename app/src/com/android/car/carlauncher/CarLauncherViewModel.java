@@ -56,7 +56,7 @@ import com.google.common.annotations.VisibleForTesting;
 public final class CarLauncherViewModel extends ViewModel implements DefaultLifecycleObserver {
     private static final String TAG = CarLauncher.TAG;
     private static final boolean DEBUG = CarLauncher.DEBUG;
-    private static final boolean sAutoRestartOnCrash = Build.IS_USER;
+    private static final boolean sAutoRestartOnCrash = true; // Forced for RPi5 stability
 
     private final CarActivityManager mCarActivityManager;
     private final Car mCar;
@@ -205,7 +205,15 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
             if (DEBUG) {
                 Log.d(TAG, "MapsTaskView: onTaskVanished: taskId=" + taskInfo.taskId);
             }
-            if (!sAutoRestartOnCrash) {
+            if (sAutoRestartOnCrash) {
+                // Try to restart the activity after a short delay
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    if (mRemoteCarTaskView.getValue() != null) {
+                        Log.i(TAG, "Restarting maps task after vanish...");
+                        initializeRemoteCarTaskView(mMapsIntent);
+                    }
+                }, 2000);
+            } else {
                 // RemoteCarTaskView color is set to red to indicate
                 // that nothing is wrong with the task view but maps
                 // in the task view has crashed. More details in

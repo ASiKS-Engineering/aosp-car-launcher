@@ -160,6 +160,10 @@ public class ControlBarActivity extends FragmentActivity {
         mNavigationHandler.removeCallbacksAndMessages(null);
         hideNavigationLoading();
         CarLauncherUtils.notifyMapsVisibility(this, /* visible= */ true);
+        
+        Intent intent = CarLauncherUtils.getCamperNavigatorIntent(this);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        startActivity(intent);
     }
 
     private void showNavigationLoading() {

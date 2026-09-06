@@ -238,6 +238,7 @@ public class CarLauncher extends FragmentActivity {
         super.onResume();
 
         maybeLogReady();
+        CarLauncherUtils.notifyMapsVisibility(this, /* visible= */ false);
     }
 
     @Override
