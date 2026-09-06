@@ -17,6 +17,7 @@
 package com.android.car.carlauncher;
 
 import android.app.ActivityOptions;
+import android.content.Context;
 import android.content.Intent;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
@@ -53,7 +54,7 @@ public class ControlBarActivity extends FragmentActivity {
     private View mNavigationLoadingOverlay;
     private final BroadcastReceiver mPackageReceiver = new BroadcastReceiver() {
         @Override
-        public void onReceive(android.content.Context context, Intent intent) {
+        public void onReceive(Context context, Intent intent) {
             if (Intent.ACTION_PACKAGE_ADDED.equals(intent.getAction())
                     && intent.getData() != null
                     && "com.example.campernavigator".equals(intent.getData().getSchemeSpecificPart())
@@ -86,38 +87,12 @@ public class ControlBarActivity extends FragmentActivity {
         setContentView(R.layout.control_bar_container);
         mNavigationLoadingOverlay = findViewById(R.id.navigation_loading_overlay);
         
-        findViewById(R.id.navigation_button).setOnClickListener(view -> openNavigation());
-        findViewById(R.id.home_button).setOnClickListener(view -> openHome());
+        View navBtn = findViewById(R.id.navigation_button);
+        if (navBtn != null) navBtn.setOnClickListener(view -> openNavigation());
         
-        // Additional buttons from the new design
-        View btnMedia = findViewById(R.id.btn_media);
-        if (btnMedia != null) {
-            btnMedia.setOnClickListener(view -> {
-                Intent intent = new Intent(Intent.ACTION_MAIN);
-                intent.addCategory(Intent.CATEGORY_APP_MUSIC);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-            });
-        }
-
-        View btnApps = findViewById(R.id.btn_apps);
-        if (btnApps != null) {
-            btnApps.setOnClickListener(view -> {
-                Intent intent = new Intent(this, AppGridActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-            });
-        }
-
-        View btnPhone = findViewById(R.id.btn_phone);
-        if (btnPhone != null) {
-            btnPhone.setOnClickListener(view -> {
-                Intent intent = new Intent(Intent.ACTION_DIAL);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-            });
-        }
-
+        View homeBtn = findViewById(R.id.home_button);
+        if (homeBtn != null) homeBtn.setOnClickListener(view -> openHome());
+        
         IntentFilter packageFilter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
         packageFilter.addDataScheme("package");
         registerReceiver(mPackageReceiver, packageFilter);
@@ -139,25 +114,12 @@ public class ControlBarActivity extends FragmentActivity {
             for (String providerClassName : getResources().getStringArray(
                     R.array.config_homeCardModuleClasses_horizontal)) {
                 try {
-                    long reflectionStartTime = System.currentTimeMillis();
                     HomeCardModule cardModule = (HomeCardModule)
                             Class.forName(providerClassName).newInstance();
-                    if (cardModule.getCardResId() == R.id.top_card) {
-                        View topCard = findViewById(R.id.top_card);
-                        if (topCard != null) {
-                            topCard.setVisibility(View.GONE);
-                        }
-                    }
                     cardModule.setViewModelProvider(new ViewModelProvider(/* owner= */this));
                     mHomeCardModules.add(cardModule);
-                    if (DEBUG) {
-                        long reflectionTime = System.currentTimeMillis() - reflectionStartTime;
-                        Log.d(TAG, "Initialization of HomeCardModule class " + providerClassName
-                                + " took " + reflectionTime + " ms");
-                    }
-                } catch (IllegalAccessException | InstantiationException
-                         | ClassNotFoundException e) {
-                    Log.w(TAG, "Unable to create HomeCardProvider class " + providerClassName, e);
+                } catch (Exception e) {
+                    Log.w(TAG, "Unable to create HomeCardProvider", e);
                 }
             }
         }
@@ -201,12 +163,12 @@ public class ControlBarActivity extends FragmentActivity {
     }
 
     private void showNavigationLoading() {
-        mNavigationLoadingOverlay.setVisibility(View.VISIBLE);
+        if (mNavigationLoadingOverlay != null) mNavigationLoadingOverlay.setVisibility(View.VISIBLE);
     }
 
     private void hideNavigationLoading() {
         mNavigationHandler.removeCallbacksAndMessages(null);
-        mNavigationLoadingOverlay.setVisibility(View.GONE);
+        if (mNavigationLoadingOverlay != null) mNavigationLoadingOverlay.setVisibility(View.GONE);
     }
 
     @Override
