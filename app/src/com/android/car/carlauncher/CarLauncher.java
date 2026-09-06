@@ -253,6 +253,24 @@ public class CarLauncher extends FragmentActivity {
         maybeLogReady();
         Log.i(TAG, "Home Screen resumed: notifying maps visibility = false");
         CarLauncherUtils.notifyMapsVisibility(this, /* visible= */ false);
+        
+        // Ensure map is hosted in TaskView ONLY when launcher is visible
+        // AND not already hosted to avoid restart loops
+        if (mCarLauncherViewModel != null && mMapsCard != null 
+                && mCarLauncherViewModel.getRemoteCarTaskView().getValue() == null) {
+             mCarLauncherViewModel.initializeRemoteCarTaskView(getMapsIntent());
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i(TAG, "Home Screen paused: releasing maps task view");
+        // We MUST release the TaskView so it doesn't "capture" the map activity 
+        // when the user is trying to use it in fullscreen.
+        if (mCarLauncherViewModel != null && mCarLauncherViewModel.getRemoteCarTaskView().getValue() != null) {
+            mCarLauncherViewModel.getRemoteCarTaskView().getValue().release();
+        }
     }
 
     @Override

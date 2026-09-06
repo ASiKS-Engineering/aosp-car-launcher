@@ -207,23 +207,10 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
             if (DEBUG) {
                 Log.d(TAG, "MapsTaskView: onTaskVanished: taskId=" + taskInfo.taskId);
             }
-            if (sAutoRestartOnCrash) {
-                // RemoteCarTaskView color is set to transparent to keep showing the placeholder
+            // Do not manually restart here! It will steal the task when trying to go fullscreen.
+            // setShouldAutoRestartOnTaskRemoval(true) in the config handles real crashes.
+            if (mRemoteCarTaskView.getValue() != null) {
                 mRemoteCarTaskView.getValue().setBackgroundColor(Color.TRANSPARENT);
-
-                // Try to restart the activity after a short delay
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    if (mRemoteCarTaskView.getValue() != null) {
-                        Log.i(TAG, "Restarting maps task after vanish...");
-                        initializeRemoteCarTaskView(mMapsIntent);
-                    }
-                }, 2000);
-            } else {
-                // RemoteCarTaskView color is set to red to indicate
-                // that nothing is wrong with the task view but maps
-                // in the task view has crashed. More details in
-                // b/247156851.
-                mRemoteCarTaskView.getValue().setBackgroundColor(Color.RED);
             }
         }
     }
