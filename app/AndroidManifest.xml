@@ -79,6 +79,8 @@
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATIONS"/>
     <!-- Permission to bind to an AppWidget service. -->
     <uses-permission android:name="android.permission.BIND_APPWIDGET"/>
+    <!-- Permission to allow background activity starts for TaskView embedding -->
+    <uses-permission android:name="android.permission.START_ACTIVITIES_FROM_BACKGROUND"/>
 
     <!-- To connect to media browser services in other apps, media browser clients
     that target Android 11 need to add the following in their manifest -->
