@@ -77,6 +77,26 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
         initializeRemoteCarTaskView(mapsIntent);
     }
 
+     /**
+     * Recreates the RemoteCarTaskView and releases the previous instance.
+     *
+     * This is required when the navigation task has previously been moved
+     * from the embedded TaskView into fullscreen mode.
+     */
+    public void recreateRemoteCarTaskView(Intent mapsIntent) {
+        Log.d(TAG, "Recreating RemoteCarTaskView");
+    
+        if (mRemoteCarTaskView != null
+                && mRemoteCarTaskView.getValue() != null) {
+            Log.d(TAG, "Releasing previous RemoteCarTaskView");
+            mRemoteCarTaskView.getValue().release();
+        }
+    
+        mRemoteCarTaskView = new MutableLiveData<>(null);
+    
+        initializeRemoteCarTaskView(mapsIntent);
+    }
+
     /**
      * Initialize the remote car task view with the maps intent.
      */
