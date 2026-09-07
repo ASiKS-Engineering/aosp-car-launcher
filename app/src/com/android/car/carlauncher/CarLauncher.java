@@ -249,15 +249,17 @@ public class CarLauncher extends FragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        maybeLogReady();
-        Log.i(TAG, "Home Screen resumed: notifying maps visibility = false");
-        CarLauncherUtils.notifyMapsVisibility(this, /* visible= */ false);
-        
-        // Ensure map is hosted in TaskView ONLY when launcher is visible
-        if (mCarLauncherViewModel != null && mMapsCard != null 
-                && mCarLauncherViewModel.getRemoteCarTaskView().getValue() == null) {
-             mCarLauncherViewModel.initializeRemoteCarTaskView(getMapsIntent());
+    
+        Log.i(TAG, "Home Screen resumed");
+    
+        CarLauncherUtils.notifyMapsVisibility(
+                this,
+                /* visible= */ false);
+    
+        if (mCarLauncherViewModel != null && mMapsCard != null) {
+            Log.i(TAG, "Recreating embedded navigation TaskView");
+            mCarLauncherViewModel.recreateRemoteCarTaskView(
+                    getMapsIntent());
         }
     }
 
