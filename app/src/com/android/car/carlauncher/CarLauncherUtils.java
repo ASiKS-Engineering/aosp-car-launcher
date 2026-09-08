@@ -34,10 +34,11 @@ public class CarLauncherUtils {
 
     private static final String TAG = "CarLauncherUtils";
     private static final String ACTION_APP_GRID = "com.android.car.carlauncher.ACTION_APP_GRID";
-    public static final String ACTION_MAPS_VISIBILITY_CHANGED =
-        "com.android.car.carlauncher.action.MAPS_VISIBILITY_CHANGED";
-    public static final String EXTRA_MAPS_VISIBLE =
-        "com.android.car.carlauncher.extra.MAPS_VISIBLE";
+    public static final String ACTION_NAVIGATION_UI_MODE_CHANGED =
+        "com.example.campernavigator.action.NAVIGATION_UI_MODE_CHANGED";
+	public static final String EXTRA_NAVIGATION_UI_MODE = "com.example.campernavigator.extra.NAVIGATION_UI_MODE";
+	public static final String NAVIGATION_UI_MODE_HOME = "HOME";
+	public static final String NAVIGATION_UI_MODE_FOREGROUND = "FOREGROUND";
 
     private CarLauncherUtils() {
     }
@@ -95,19 +96,43 @@ public class CarLauncherUtils {
         return maybeReplaceWithTosMapIntent(context, defaultIntent);
     }
 
-    /** Notifies the selected maps app whether it is being shown full screen. */
-    public static void notifyMapsVisibility(Context context, boolean visible) {
-        Intent mapsIntent = getMapsIntent(context);
-        ComponentName component = mapsIntent.getComponent();
-        if (component == null) {
-            return;
-        }
+	/**
+	 * Explicitly tells CamperNavigator which Automotive UI mode is active.
+	 */
+	public static void setNavigationUiMode(
+			Context context,
+			String mode) {
 
-        Intent visibilityIntent = new Intent(ACTION_MAPS_VISIBILITY_CHANGED)
-                .setPackage(component.getPackageName())
-                .putExtra(EXTRA_MAPS_VISIBLE, visible);
-        context.sendBroadcast(visibilityIntent);
-    }
+		Intent mapsIntent =
+				getCamperNavigatorIntent(context);
+
+		ComponentName component =
+				mapsIntent.getComponent();
+
+		if (component == null) {
+			Log.w(
+					TAG,
+					"Cannot set navigation UI mode: " +
+					"no CamperNavigator component"
+			);
+			return;
+		}
+
+		Intent modeIntent =
+				new Intent(
+						ACTION_NAVIGATION_UI_MODE_CHANGED)
+						.setComponent(component)
+						.putExtra(
+								EXTRA_NAVIGATION_UI_MODE,
+								mode);
+
+		context.sendBroadcast(modeIntent);
+
+		Log.i(
+				TAG,
+				"CamperNavigator UI mode changed to " + mode
+		);
+	}
 
     /**
      * Returns {@code true} if a proper limited map intent is configured via

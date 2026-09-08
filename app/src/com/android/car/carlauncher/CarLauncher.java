@@ -252,9 +252,9 @@ public class CarLauncher extends FragmentActivity {
     
         Log.i(TAG, "Home Screen resumed");
     
-        CarLauncherUtils.notifyMapsVisibility(
-                this,
-                /* visible= */ false);
+        CarLauncherUtils.setNavigationUiMode(
+			this,
+			CarLauncherUtils.NAVIGATION_UI_MODE_HOME);
     
         if (mCarLauncherViewModel != null && mMapsCard != null) {
             Log.i(TAG, "Recreating embedded navigation TaskView");
