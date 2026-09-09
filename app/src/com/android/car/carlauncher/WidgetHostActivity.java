@@ -335,7 +335,7 @@ public class WidgetHostActivity extends AppCompatActivity {
         hideNavigationLoading();
         CarLauncherUtils.setNavigationUiMode(
         this,
-        CarLauncherUtils.NAVIGATION_UI_MODE_FOREGROUND);
+        CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN);
     }
 
     private void showNavigationLoading() {
