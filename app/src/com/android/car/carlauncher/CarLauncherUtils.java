@@ -38,7 +38,7 @@ public class CarLauncherUtils {
         "com.example.campernavigator.action.NAVIGATION_UI_MODE_CHANGED";
 	public static final String EXTRA_NAVIGATION_UI_MODE = "com.example.campernavigator.extra.NAVIGATION_UI_MODE";
 	public static final String NAVIGATION_UI_MODE_HOME = "HOME";
-	public static final String NAVIGATION_UI_MODE_FOREGROUND = "FOREGROUND";
+	public static final String NAVIGATION_UI_MODE_FOREGROUND = "FULLSCREEN";
 
     private CarLauncherUtils() {
     }
@@ -50,10 +50,13 @@ public class CarLauncherUtils {
     public static Intent getCamperNavigatorIntent(Context context) {
         ComponentName component = ComponentName.unflattenFromString(
                 context.getString(R.string.config_camperNavigatorComponent));
-        return new Intent(Intent.ACTION_MAIN)
-                .addCategory(Intent.CATEGORY_APP_MAPS)
-                .setComponent(component)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		return new Intent(Intent.ACTION_MAIN)
+    		.addCategory(Intent.CATEGORY_APP_MAPS)
+    		.setComponent(component)
+    		.putExtra(
+        		EXTRA_NAVIGATION_UI_MODE,
+        		NAVIGATION_UI_MODE_HOME)
+    		.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
     }
 
     public static boolean isCamperNavigatorAvailable(Context context) {
