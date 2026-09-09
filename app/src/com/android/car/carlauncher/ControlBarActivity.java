@@ -152,12 +152,12 @@ public class ControlBarActivity extends FragmentActivity {
     private void startCamperNavigator() {
         mNavigationHandler.removeCallbacksAndMessages(null);
         hideNavigationLoading();
-        CarLauncherUtils.setNavigationUiMode(this, CarLauncherUtils.NAVIGATION_UI_MODE_FOREGROUND);
+        CarLauncherUtils.setNavigationUiMode(this, CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN);
         
         Intent intent = CarLauncherUtils.getCamperNavigatorIntent(this);
 		intent.putExtra(
         CarLauncherUtils.EXTRA_NAVIGATION_UI_MODE,
-        CarLauncherUtils.NAVIGATION_UI_MODE_FOREGROUND);
+        CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN);
         // FORCE the activity to the top, breaking out of any embedding.
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK 
                       | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT 
