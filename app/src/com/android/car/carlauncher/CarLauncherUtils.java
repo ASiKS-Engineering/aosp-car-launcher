@@ -38,7 +38,7 @@ public class CarLauncherUtils {
         "com.example.campernavigator.action.NAVIGATION_UI_MODE_CHANGED";
 	public static final String EXTRA_NAVIGATION_UI_MODE = "com.example.campernavigator.extra.NAVIGATION_UI_MODE";
 	public static final String NAVIGATION_UI_MODE_HOME = "HOME";
-	public static final String NAVIGATION_UI_MODE_FOREGROUND = "FULLSCREEN";
+	public static final String NAVIGATION_UI_MODE_FULLSCREEN = "FULLSCREEN";
 
     private CarLauncherUtils() {
     }
