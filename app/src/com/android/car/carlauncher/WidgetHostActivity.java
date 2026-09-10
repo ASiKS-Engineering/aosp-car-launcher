@@ -20,15 +20,12 @@ import android.app.ActivityOptions;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.UserManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -70,7 +67,6 @@ public class WidgetHostActivity extends AppCompatActivity {
     private static final int RESULT_ERROR = RESULT_CANCELED;
     private static final int RESULT_NEEDS_BIND = RESULT_CANCELED + 1;
     private static final int RESULT_NEEDS_CONFIGURE = RESULT_NEEDS_BIND + 1;
-    private static final long NAVIGATION_WAIT_TIMEOUT_MS = 30_000;
 
     private final IntentHandler mIntentHandler = intent -> {
         if (intent != null) {
@@ -156,20 +152,6 @@ public class WidgetHostActivity extends AppCompatActivity {
     private int mWidgetVerticalMargin;
     private int mWidgetHeight;
     private int mWidgetWidth;
-    private final Handler mNavigationHandler = new Handler(Looper.getMainLooper());
-    private View mNavigationLoadingOverlay;
-    private final BroadcastReceiver mPackageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (Intent.ACTION_PACKAGE_ADDED.equals(intent.getAction())
-                    && intent.getData() != null
-                    && "com.example.campernavigator".equals(intent.getData().getSchemeSpecificPart())
-                    && mNavigationLoadingOverlay.getVisibility() == View.VISIBLE) {
-                startCamperNavigator();
-            }
-        }
-    };
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -182,12 +164,6 @@ public class WidgetHostActivity extends AppCompatActivity {
         mIsLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE;
 
         setContentView(R.layout.widget_host_activity);
-        mNavigationLoadingOverlay = findViewById(R.id.navigation_loading_overlay);
-        findViewById(R.id.navigation_button).setOnClickListener(view -> openNavigation());
-        findViewById(R.id.home_button).setOnClickListener(view -> openHome());
-        IntentFilter packageFilter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
-        packageFilter.addDataScheme("package");
-        registerReceiver(mPackageReceiver, packageFilter);
 
         initializeCards();
 
@@ -248,8 +224,6 @@ public class WidgetHostActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        mNavigationHandler.removeCallbacksAndMessages(null);
-        unregisterReceiver(mPackageReceiver);
         super.onDestroy();
         if (!mWidgetsLoaded && !mUserUnlocked) {
             try {
@@ -307,44 +281,6 @@ public class WidgetHostActivity extends AppCompatActivity {
 
             createHostView(widgetId, appWidgetInfo);
         }
-    }
-
-    private void openNavigation() {
-        showNavigationLoading();
-        if (CarLauncherUtils.isCamperNavigatorAvailable(this)) {
-            startCamperNavigator();
-        } else {
-            mNavigationHandler.postDelayed(this::hideNavigationLoading,
-                    NAVIGATION_WAIT_TIMEOUT_MS);
-        }
-    }
-
-    private void openHome() {
-        hideNavigationLoading();
-        CarLauncherUtils.setNavigationUiMode(
-        this,
-        CarLauncherUtils.NAVIGATION_UI_MODE_HOME);
-        Intent homeIntent = new Intent(Intent.ACTION_MAIN)
-                .addCategory(Intent.CATEGORY_HOME)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(homeIntent);
-    }
-
-    private void startCamperNavigator() {
-        mNavigationHandler.removeCallbacksAndMessages(null);
-        hideNavigationLoading();
-        CarLauncherUtils.setNavigationUiMode(
-        this,
-        CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN);
-    }
-
-    private void showNavigationLoading() {
-        mNavigationLoadingOverlay.setVisibility(View.VISIBLE);
-    }
-
-    private void hideNavigationLoading() {
-        mNavigationHandler.removeCallbacksAndMessages(null);
-        mNavigationLoadingOverlay.setVisibility(View.GONE);
     }
 
     private void initializeCards() {

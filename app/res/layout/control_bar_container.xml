@@ -94,16 +94,6 @@
                 android:scaleType="fitCenter"/>
 
             <ImageButton
-                android:id="@+id/navigation_button"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_navigation"
-                app:tint="@android:color/white"
-                android:padding="16dp"
-                android:scaleType="fitCenter"/>
-
-            <ImageButton
                 android:id="@+id/btn_fan"
                 android:layout_width="64dp"
                 android:layout_height="64dp"
@@ -111,18 +101,6 @@
                 android:src="@drawable/ic_fan"
                 app:tint="@android:color/white"
                 android:padding="16dp"
-                android:scaleType="fitCenter"/>
-
-            <ImageButton
-                android:id="@+id/home_button"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:layout_marginLeft="8dp"
-                android:layout_marginRight="8dp"
-                android:background="@drawable/car_button_background"
-                android:src="@drawable/ic_home"
-                app:tint="@android:color/white"
-                android:padding="12dp"
                 android:scaleType="fitCenter"/>
 
             <ImageButton
@@ -186,31 +164,4 @@
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-      <LinearLayout
-        android:id="@+id/navigation_loading_overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#99000000"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <TextView
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/navigation_starting"
-          android:textColor="@android:color/white"
-          android:textSize="20sp" />
-
-        <ProgressBar
-          android:layout_width="240dp"
-          android:layout_height="wrap_content"
-          android:layout_marginTop="16dp"
-          android:indeterminate="true"
-          style="?android:attr/progressBarStyleHorizontal" />
-      </LinearLayout>
-
     </FrameLayout>

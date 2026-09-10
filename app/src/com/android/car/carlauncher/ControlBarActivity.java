@@ -17,16 +17,9 @@
 package com.android.car.carlauncher;
 
 import android.app.ActivityOptions;
-import android.content.Context;
-import android.content.Intent;
-import android.content.BroadcastReceiver;
-import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
-import android.view.View;
 
 import androidx.collection.ArraySet;
 import androidx.fragment.app.FragmentActivity;
@@ -47,22 +40,8 @@ import java.util.Set;
 public class ControlBarActivity extends FragmentActivity {
     private static final String TAG = "ControlBarActivity";
     private static final boolean DEBUG = false;
-    private static final long NAVIGATION_WAIT_TIMEOUT_MS = 30_000;
 
     private Set<HomeCardModule> mHomeCardModules;
-    private final Handler mNavigationHandler = new Handler(Looper.getMainLooper());
-    private View mNavigationLoadingOverlay;
-    private final BroadcastReceiver mPackageReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (Intent.ACTION_PACKAGE_ADDED.equals(intent.getAction())
-                    && intent.getData() != null
-                    && "com.example.campernavigator".equals(intent.getData().getSchemeSpecificPart())
-                    && mNavigationLoadingOverlay.getVisibility() == View.VISIBLE) {
-                startCamperNavigator();
-            }
-        }
-    };
 
     private final IntentHandler mIntentHandler = intent -> {
         if (intent != null) {
@@ -85,17 +64,6 @@ public class ControlBarActivity extends FragmentActivity {
         getTheme().applyStyle(R.style.CarLauncherActivityThemeOverlay, true);
 
         setContentView(R.layout.control_bar_container);
-        mNavigationLoadingOverlay = findViewById(R.id.navigation_loading_overlay);
-        
-        View navBtn = findViewById(R.id.navigation_button);
-        if (navBtn != null) navBtn.setOnClickListener(view -> openNavigation());
-        
-        View homeBtn = findViewById(R.id.home_button);
-        if (homeBtn != null) homeBtn.setOnClickListener(view -> openHome());
-        
-        IntentFilter packageFilter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
-        packageFilter.addDataScheme("package");
-        registerReceiver(mPackageReceiver, packageFilter);
         initializeCards();
 
         MediaLaunchRouter.getInstance().registerMediaLaunchHandler(mMediaMediaLaunchHandler);
@@ -128,56 +96,5 @@ public class ControlBarActivity extends FragmentActivity {
             transaction.replace(cardModule.getCardResId(), cardModule.getCardView().getFragment());
         }
         transaction.commitNow();
-    }
-
-    private void openNavigation() {
-        showNavigationLoading();
-        if (CarLauncherUtils.isCamperNavigatorAvailable(this)) {
-            startCamperNavigator();
-        } else {
-            mNavigationHandler.postDelayed(this::hideNavigationLoading,
-                    NAVIGATION_WAIT_TIMEOUT_MS);
-        }
-    }
-
-    private void openHome() {
-        hideNavigationLoading();
-        CarLauncherUtils.setNavigationUiMode(this, CarLauncherUtils.NAVIGATION_UI_MODE_HOME);
-        Intent homeIntent = new Intent(Intent.ACTION_MAIN)
-                .addCategory(Intent.CATEGORY_HOME)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(homeIntent);
-    }
-
-    private void startCamperNavigator() {
-        mNavigationHandler.removeCallbacksAndMessages(null);
-        hideNavigationLoading();
-        CarLauncherUtils.setNavigationUiMode(this, CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN);
-        
-        Intent intent = CarLauncherUtils.getCamperNavigatorIntent(this);
-		intent.putExtra(
-        CarLauncherUtils.EXTRA_NAVIGATION_UI_MODE,
-        CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN);
-        // FORCE the activity to the top, breaking out of any embedding.
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK 
-                      | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT 
-                      | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        startActivity(intent);
-    }
-
-    private void showNavigationLoading() {
-        if (mNavigationLoadingOverlay != null) mNavigationLoadingOverlay.setVisibility(View.VISIBLE);
-    }
-
-    private void hideNavigationLoading() {
-        mNavigationHandler.removeCallbacksAndMessages(null);
-        if (mNavigationLoadingOverlay != null) mNavigationLoadingOverlay.setVisibility(View.GONE);
-    }
-
-    @Override
-    protected void onDestroy() {
-        mNavigationHandler.removeCallbacksAndMessages(null);
-        unregisterReceiver(mPackageReceiver);
-        super.onDestroy();
     }
 }
