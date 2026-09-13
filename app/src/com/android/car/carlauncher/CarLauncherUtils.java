@@ -34,17 +34,11 @@ public class CarLauncherUtils {
 
     private static final String TAG = "CarLauncherUtils";
     private static final String ACTION_APP_GRID = "com.android.car.carlauncher.ACTION_APP_GRID";
-        private static final String ACTION_SET_CAMPER_NAVIGATOR_MODE =
-        "com.asiks.camper.navigator.action.SET_MODE";
-        private static final String EXTRA_CAMPER_NAVIGATOR_MODE =
-        "com.asiks.camper.navigator.extra.MODE";
-    private static final String EXTRA_APPLY_SCREEN_TRANSITION =
-        "com.asiks.camper.navigator.extra.APPLY_SCREEN_TRANSITION";
     public static final String ACTION_NAVIGATION_UI_MODE_CHANGED =
         "com.example.campernavigator.action.NAVIGATION_UI_MODE_CHANGED";
 	public static final String EXTRA_NAVIGATION_UI_MODE = "com.example.campernavigator.extra.NAVIGATION_UI_MODE";
 	public static final String NAVIGATION_UI_MODE_HOME = "HOME";
-	public static final String NAVIGATION_UI_MODE_FULLSCREEN = "FULLSCREEN";
+	public static final String NAVIGATION_UI_MODE_FOREGROUND = "FOREGROUND";
 
     private CarLauncherUtils() {
     }
@@ -56,13 +50,10 @@ public class CarLauncherUtils {
     public static Intent getCamperNavigatorIntent(Context context) {
         ComponentName component = ComponentName.unflattenFromString(
                 context.getString(R.string.config_camperNavigatorComponent));
-		return new Intent(Intent.ACTION_MAIN)
-    		.addCategory(Intent.CATEGORY_APP_MAPS)
-    		.setComponent(component)
-    		.putExtra(
-        		EXTRA_NAVIGATION_UI_MODE,
-        		NAVIGATION_UI_MODE_HOME)
-    		.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        return new Intent(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_APP_MAPS)
+                .setComponent(component)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
     }
 
     public static boolean isCamperNavigatorAvailable(Context context) {
@@ -111,28 +102,37 @@ public class CarLauncherUtils {
 	public static void setNavigationUiMode(
 			Context context,
 			String mode) {
-        requestNavigatorMode(context, mode, /* applyScreenTransition= */ false);
+
+		Intent mapsIntent =
+				getCamperNavigatorIntent(context);
+
+		ComponentName component =
+				mapsIntent.getComponent();
+
+		if (component == null) {
+			Log.w(
+					TAG,
+					"Cannot set navigation UI mode: " +
+					"no CamperNavigator component"
+			);
+			return;
+		}
+
+		Intent modeIntent =
+				new Intent(
+						ACTION_NAVIGATION_UI_MODE_CHANGED)
+						.setComponent(component)
+						.putExtra(
+								EXTRA_NAVIGATION_UI_MODE,
+								mode);
+
+		context.sendBroadcast(modeIntent);
+
+		Log.i(
+				TAG,
+				"CamperNavigator UI mode changed to " + mode
+		);
 	}
-
-    public static void showCamperNavigatorFullscreen(Context context) {
-        requestNavigatorMode(
-                context,
-                NAVIGATION_UI_MODE_FULLSCREEN,
-                /* applyScreenTransition= */ true);
-    }
-
-    private static void requestNavigatorMode(
-            Context context,
-            String mode,
-            boolean applyScreenTransition) {
-            Intent modeIntent = new Intent(ACTION_SET_CAMPER_NAVIGATOR_MODE)
-                    .putExtra(EXTRA_CAMPER_NAVIGATOR_MODE, mode)
-                .putExtra(EXTRA_APPLY_SCREEN_TRANSITION, applyScreenTransition);
-        context.sendBroadcast(modeIntent);
-
-        Log.i(TAG, "Requested CamperNavigator mode=" + mode
-                + " applyScreenTransition=" + applyScreenTransition);
-    }
 
     /**
      * Returns {@code true} if a proper limited map intent is configured via

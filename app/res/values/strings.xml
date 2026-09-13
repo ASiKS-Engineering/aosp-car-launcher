@@ -16,6 +16,10 @@
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_title">Car Launcher</string>
+    <string name="navigation_button_content_description">Navigation</string>
+    <string name="home_button_content_description">Home</string>
+    <string name="navigation_starting">Navigation wird gestartet...</string>
+
     <string name="default_media_song_title"></string>
 
     <string name="tap_for_more_info_text">Tap card for more info</string>
@@ -64,6 +68,4 @@
     <!-- MapTos strings -->
     <string name="map_tos_review_button_text">Maps is disabled. Terms of service not accepted</string>
     <string name="map_tos_review_button_distraction_optimized_text">Maps is disabled. Review after your drive.</string>
-
-    <string name="navigation_starting">Navigation wird gestartet...</string>
 </resources>
