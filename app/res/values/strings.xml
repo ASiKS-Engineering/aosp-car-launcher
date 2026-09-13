@@ -64,4 +64,6 @@
     <!-- MapTos strings -->
     <string name="map_tos_review_button_text">Maps is disabled. Terms of service not accepted</string>
     <string name="map_tos_review_button_distraction_optimized_text">Maps is disabled. Review after your drive.</string>
+
+    <string name="navigation_starting">Navigation wird gestartet...</string>
 </resources>
