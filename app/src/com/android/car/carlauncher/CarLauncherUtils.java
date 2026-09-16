@@ -24,7 +24,12 @@ import android.util.Log;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Set;
 
 /**
@@ -34,11 +39,18 @@ public class CarLauncherUtils {
 
     private static final String TAG = "CarLauncherUtils";
     private static final String ACTION_APP_GRID = "com.android.car.carlauncher.ACTION_APP_GRID";
+    // This action/extra pair is intentionally not tied to a specific component: both
+    // CarLauncher (to show/hide its home cards) and CamperNavigator (to switch its own UI)
+    // register a dynamic receiver for it, so a single broadcast from a system bar button
+    // drives both sides in lock-step, without ever starting a second activity/task.
     public static final String ACTION_NAVIGATION_UI_MODE_CHANGED =
         "com.example.campernavigator.action.NAVIGATION_UI_MODE_CHANGED";
 	public static final String EXTRA_NAVIGATION_UI_MODE = "com.example.campernavigator.extra.NAVIGATION_UI_MODE";
 	public static final String NAVIGATION_UI_MODE_HOME = "HOME";
-	public static final String NAVIGATION_UI_MODE_FOREGROUND = "FOREGROUND";
+	public static final String NAVIGATION_UI_MODE_FULLSCREEN = "FULLSCREEN";
+
+    // "Last User Mode" file: persists the navigation UI mode across reboots.
+    private static final String LUM_FILE_NAME = "nav_ui_mode.lum";
 
     private CarLauncherUtils() {
     }
@@ -53,7 +65,35 @@ public class CarLauncherUtils {
         return new Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_APP_MAPS)
                 .setComponent(component)
+                .putExtra(EXTRA_NAVIGATION_UI_MODE, readPersistedNavigationUiMode(context))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    }
+
+    /** Reads the LUM (Last User Mode) file, defaulting to HOME if absent/unreadable. */
+    public static String readPersistedNavigationUiMode(Context context) {
+        File file = new File(context.getFilesDir(), LUM_FILE_NAME);
+        if (!file.exists()) {
+            return NAVIGATION_UI_MODE_HOME;
+        }
+        try {
+            String content = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
+                    .trim();
+            return NAVIGATION_UI_MODE_FULLSCREEN.equals(content)
+                    ? NAVIGATION_UI_MODE_FULLSCREEN : NAVIGATION_UI_MODE_HOME;
+        } catch (IOException e) {
+            Log.w(TAG, "Failed to read LUM file, defaulting to HOME", e);
+            return NAVIGATION_UI_MODE_HOME;
+        }
+    }
+
+    /** Persists the current navigation UI mode to the LUM (Last User Mode) file. */
+    public static void persistNavigationUiMode(Context context, String mode) {
+        File file = new File(context.getFilesDir(), LUM_FILE_NAME);
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(mode);
+        } catch (IOException e) {
+            Log.w(TAG, "Failed to persist LUM file", e);
+        }
     }
 
     public static boolean isCamperNavigatorAvailable(Context context) {
@@ -97,41 +137,19 @@ public class CarLauncherUtils {
     }
 
 	/**
-	 * Explicitly tells CamperNavigator which Automotive UI mode is active.
+	 * Broadcasts the active Automotive navigation UI mode (HOME embedded vs. FULLSCREEN).
+	 *
+	 * <p>Deliberately an implicit (component-less) broadcast: both CarLauncher itself and
+	 * CamperNavigator hold a dynamically registered receiver for {@link
+	 * #ACTION_NAVIGATION_UI_MODE_CHANGED}, so a single call keeps both UIs in sync without
+	 * ever starting/restarting an activity.
 	 */
-	public static void setNavigationUiMode(
-			Context context,
-			String mode) {
-
-		Intent mapsIntent =
-				getCamperNavigatorIntent(context);
-
-		ComponentName component =
-				mapsIntent.getComponent();
-
-		if (component == null) {
-			Log.w(
-					TAG,
-					"Cannot set navigation UI mode: " +
-					"no CamperNavigator component"
-			);
-			return;
-		}
-
-		Intent modeIntent =
-				new Intent(
-						ACTION_NAVIGATION_UI_MODE_CHANGED)
-						.setComponent(component)
-						.putExtra(
-								EXTRA_NAVIGATION_UI_MODE,
-								mode);
-
+	public static void setNavigationUiMode(Context context, String mode) {
+		Intent modeIntent = new Intent(ACTION_NAVIGATION_UI_MODE_CHANGED)
+				.putExtra(EXTRA_NAVIGATION_UI_MODE, mode);
 		context.sendBroadcast(modeIntent);
 
-		Log.i(
-				TAG,
-				"CamperNavigator UI mode changed to " + mode
-		);
+		Log.i(TAG, "Navigation UI mode changed to " + mode);
 	}
 
     /**

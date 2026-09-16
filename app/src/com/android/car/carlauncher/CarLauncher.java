@@ -28,7 +28,10 @@ import android.app.ActivityManager;
 import android.app.ActivityOptions;
 import android.app.TaskStackListener;
 import android.car.Car;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.database.ContentObserver;
 import android.os.Bundle;
@@ -42,6 +45,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import androidx.collection.ArraySet;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
@@ -88,6 +92,8 @@ public class CarLauncher extends FragmentActivity {
     private boolean mUseSmallCanvasOptimizedMap;
     private ViewGroup mMapsCard;
     private View mMapsPlaceholder;
+    private String mNavUiMode = CarLauncherUtils.NAVIGATION_UI_MODE_HOME;
+    private boolean mNavUiModeReceiverRegistered;
 
     @VisibleForTesting
     CarLauncherViewModel mCarLauncherViewModel;
@@ -109,9 +115,25 @@ public class CarLauncher extends FragmentActivity {
             if (!mUseSmallCanvasOptimizedMap
                     && !homeTaskVisible
                     && getTaskViewTaskId() == task.taskId) {
-                // NOTE: We commented this out to allow the Navi app to break out of TaskView
-                // when the user explicitly clicks the Navigation button in the control bar.
-                // bringToForeground();
+                // The nav app is always embedded now (switching is done in-place via
+                // ACTION_NAVIGATION_UI_MODE_CHANGED), so if its task ever tries to restart
+                // outside of the TaskView, pull the launcher back to the foreground.
+                bringToForeground();
+            }
+        }
+    };
+
+    /**
+     * Keeps CarLauncher's own UI (home cards) and CamperNavigator's UI in sync whenever a
+     * system bar button broadcasts a navigation UI mode change. This is the only way the mode
+     * ever changes; the embedded nav instance itself is never restarted.
+     */
+    private final BroadcastReceiver mNavUiModeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String mode = intent.getStringExtra(CarLauncherUtils.EXTRA_NAVIGATION_UI_MODE);
+            if (mode != null) {
+                applyNavUiMode(mode);
             }
         }
     };
@@ -191,6 +213,17 @@ public class CarLauncher extends FragmentActivity {
                         setupRemoteCarTaskView(mMapsCard);
                         setupContentObserversForTos();
                     }
+
+                    ContextCompat.registerReceiver(this, mNavUiModeReceiver,
+                            new IntentFilter(CarLauncherUtils.ACTION_NAVIGATION_UI_MODE_CHANGED),
+                            ContextCompat.RECEIVER_EXPORTED);
+                    mNavUiModeReceiverRegistered = true;
+
+                    // Restore the LUM (Last User Mode) from the previous session/boot and apply
+                    // it to CarLauncher's own home cards. CamperNavigator restores its own UI
+                    // independently from the mode extra baked into the maps intent (see
+                    // CarLauncherUtils#getCamperNavigatorIntent), so no broadcast is needed here.
+                    applyNavUiMode(CarLauncherUtils.readPersistedNavigationUiMode(this));
                 }
             } else {
                 // For Passenger display show the AppGridFragment in place of the Maps view.
@@ -249,18 +282,26 @@ public class CarLauncher extends FragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
-    
+
         Log.i(TAG, "Home Screen resumed");
-    
-        CarLauncherUtils.setNavigationUiMode(
-			this,
-			CarLauncherUtils.NAVIGATION_UI_MODE_HOME);
-    
-        if (mCarLauncherViewModel != null && mMapsCard != null) {
-            Log.i(TAG, "Recreating embedded navigation TaskView");
-            mCarLauncherViewModel.recreateRemoteCarTaskView(
-                    getMapsIntent());
+        // Intentionally not touching the nav UI mode or the TaskView here: with the nav app
+        // always embedded, onResume can fire for reasons unrelated to the Home/Nav buttons
+        // (e.g. screen on/off). Mode switches happen exclusively via mNavUiModeReceiver.
+    }
+
+    /**
+     * Applies the given navigation UI mode (HOME embedded vs. FULLSCREEN) to CarLauncher's own
+     * home cards, persists it as the LUM (Last User Mode), and notifies CamperNavigator so both
+     * UIs stay in lock-step. The embedded nav instance itself is never restarted.
+     */
+    private void applyNavUiMode(String mode) {
+        if (mode.equals(mNavUiMode)) {
+            return;
         }
+        mNavUiMode = mode;
+        CarLauncherUtils.persistNavigationUiMode(this, mode);
+        initializeCards();
+        CarLauncherUtils.setNavigationUiMode(this, mode);
     }
 
     @Override
@@ -278,6 +319,10 @@ public class CarLauncher extends FragmentActivity {
         }
 
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(mTaskStackListener);
+        if (mNavUiModeReceiverRegistered) {
+            unregisterReceiver(mNavUiModeReceiver);
+            mNavUiModeReceiverRegistered = false;
+        }
         unregisterTosContentObserver();
         release();
     }
@@ -345,10 +390,11 @@ public class CarLauncher extends FragmentActivity {
                 }
             }
         }
+        boolean fullscreen = CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode);
         Stream.of(R.id.top_card, R.id.bottom_card).forEach(resId -> {
             View container = findViewById(resId);
             if (container == null) return;
-            boolean isRequired = mHomeCardModules.stream()
+            boolean isRequired = !fullscreen && mHomeCardModules.stream()
                     .anyMatch(m -> m.getCardResId() == resId);
             container.setVisibility(isRequired ? View.VISIBLE : View.GONE);
         });
@@ -380,6 +426,10 @@ public class CarLauncher extends FragmentActivity {
     private void bringToForeground() {
         if (mCarLauncherTaskId != INVALID_TASK_ID) {
             mActivityManager.moveTaskToFront(mCarLauncherTaskId,  /* flags= */ 0);
+            
+            // KORREKTUR: Wenn der Launcher aktiv nach vorne geholt wird,
+            // schalte CamperNavigator und die Cards zurück in den HOME-Splitscreen
+            CarLauncherUtils.setNavigationUiMode(this, CarLauncherUtils.NAVIGATION_UI_MODE_HOME);
         }
     }
 
