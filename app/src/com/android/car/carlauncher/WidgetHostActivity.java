@@ -333,9 +333,7 @@ public class WidgetHostActivity extends AppCompatActivity {
     private void startCamperNavigator() {
         mNavigationHandler.removeCallbacksAndMessages(null);
         hideNavigationLoading();
-        CarLauncherUtils.setNavigationUiMode(
-        this,
-        CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN);
+        CarLauncherUtils.setNavigationUiMode(this, CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN);
     }
 
     private void showNavigationLoading() {
