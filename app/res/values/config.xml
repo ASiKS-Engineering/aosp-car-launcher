@@ -77,6 +77,9 @@
     <!-- Boolean value to indicate if the recents activity should open the most recent task on dismiss. -->
     <bool name="config_launch_most_recent_task_on_recents_dismiss">true</bool>
 
+    <!-- Diese Zeile auf TRUE setzen, um das Fenster-Management zu korrigieren -->
+    <bool name="config_useRemoteLaunchTaskView">true</bool>
+
     <!-- Config values for Calm mode and information shown on the Calm mode screen -->
     <bool name="config_enableCalmMode">true</bool>
     <bool name="config_calmMode_showClock">true</bool>

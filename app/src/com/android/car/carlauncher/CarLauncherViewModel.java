@@ -58,7 +58,8 @@ import com.google.common.annotations.VisibleForTesting;
 public final class CarLauncherViewModel extends ViewModel implements DefaultLifecycleObserver {
     private static final String TAG = CarLauncher.TAG;
     private static final boolean DEBUG = CarLauncher.DEBUG;
-    private static final boolean sAutoRestartOnCrash = true; // Forced for RPi5 stability
+    // Verhindert, dass das TaskView die App bei Fokuswechseln gewaltsam neu startet
+    private static boolean sAutoRestartOnCrash = false;
 
     private final CarActivityManager mCarActivityManager;
     private final Car mCar;

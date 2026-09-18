@@ -426,10 +426,8 @@ public class CarLauncher extends FragmentActivity {
     private void bringToForeground() {
         if (mCarLauncherTaskId != INVALID_TASK_ID) {
             mActivityManager.moveTaskToFront(mCarLauncherTaskId,  /* flags= */ 0);
-            
-            // KORREKTUR: Wenn der Launcher aktiv nach vorne geholt wird,
-            // schalte CamperNavigator und die Cards zurück in den HOME-Splitscreen
-            CarLauncherUtils.setNavigationUiMode(this, CarLauncherUtils.NAVIGATION_UI_MODE_HOME);
+
+
         }
     }
 
