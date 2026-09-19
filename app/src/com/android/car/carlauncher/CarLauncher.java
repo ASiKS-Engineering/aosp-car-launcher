@@ -223,7 +223,9 @@ public class CarLauncher extends FragmentActivity {
                     // it to CarLauncher's own home cards. CamperNavigator restores its own UI
                     // independently from the mode extra baked into the maps intent (see
                     // CarLauncherUtils#getCamperNavigatorIntent), so no broadcast is needed here.
-                    applyNavUiMode(CarLauncherUtils.readPersistedNavigationUiMode(this));
+                    // KORREKTUR: Nur Variable setzen und UI initialisieren, KEIN Broadcast beim Boot/Start
+                    mNavUiMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
+                    initializeCards();
                 }
             } else {
                 // For Passenger display show the AppGridFragment in place of the Maps view.
@@ -427,7 +429,9 @@ public class CarLauncher extends FragmentActivity {
         if (mCarLauncherTaskId != INVALID_TASK_ID) {
             mActivityManager.moveTaskToFront(mCarLauncherTaskId,  /* flags= */ 0);
 
-
+            // KORREKTUR: Wenn der Launcher aktiv in den Vordergrund kommt (Home-Button),
+            // schalte in-place zurück auf den HOME Modus (Splitscreen).
+            applyNavUiMode(CarLauncherUtils.NAVIGATION_UI_MODE_HOME);
         }
     }
 
