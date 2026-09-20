@@ -399,7 +399,7 @@ public class CarLauncher extends FragmentActivity {
             }
         }
         boolean fullscreen = CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode);
-        Stream.of(R.id.top_card, R.id.bottom_card).forEach(resId -> {
+        Stream.of(R.id.bottom_card).forEach(resId -> {
             View container = findViewById(resId);
             if (container == null) return;
             boolean isRequired = !fullscreen && mHomeCardModules.stream()
