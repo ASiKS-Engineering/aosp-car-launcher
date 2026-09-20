@@ -189,6 +189,8 @@ public class CarLauncher extends FragmentActivity {
         // default activity of the launcher
         if (isInMultiWindowMode() || isInPictureInPictureMode()) {
             setContentView(R.layout.car_launcher_multiwindow);
+            // Auch im Multi-Window Modus die Karte suchen
+            mMapsCard = findViewById(R.id.maps_card);
         } else {
             setContentView(R.layout.car_launcher);
             // Passenger displays do not require TaskView Embedding
