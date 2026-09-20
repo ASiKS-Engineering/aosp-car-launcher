@@ -127,7 +127,7 @@ public class ControlBarActivity extends FragmentActivity {
         for (HomeCardModule cardModule : mHomeCardModules) {
             transaction.replace(cardModule.getCardResId(), cardModule.getCardView().getFragment());
         }
-        transaction.commitNow();
+        transaction.commitNowAllowingStateLoss();
     }
 
     private void openNavigation() {

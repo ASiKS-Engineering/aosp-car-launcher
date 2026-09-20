@@ -404,7 +404,7 @@ public class CarLauncher extends FragmentActivity {
         for (HomeCardModule cardModule : mHomeCardModules) {
             transaction.replace(cardModule.getCardResId(), cardModule.getCardView().getFragment());
         }
-        transaction.commitNow();
+        transaction.commitNowAllowingStateLoss();
     }
 
     /** Logs that the Activity is ready. Used for startup time diagnostics. */

@@ -383,7 +383,7 @@ public class WidgetHostActivity extends AppCompatActivity {
         for (HomeCardModule cardModule : mHomeCardModules) {
             transaction.replace(cardModule.getCardResId(), cardModule.getCardView().getFragment());
         }
-        transaction.commitNow();
+        transaction.commitNowAllowingStateLoss();
     }
 
     private void loadAndDisplayWidgets() {
