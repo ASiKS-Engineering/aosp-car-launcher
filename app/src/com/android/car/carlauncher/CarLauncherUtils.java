@@ -65,8 +65,7 @@ public class CarLauncherUtils {
         return new Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_APP_MAPS)
                 .setComponent(component)
-                .putExtra(EXTRA_NAVIGATION_UI_MODE, readPersistedNavigationUiMode(context))
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                .putExtra(EXTRA_NAVIGATION_UI_MODE, readPersistedNavigationUiMode(context));
     }
 
     /** Reads the LUM (Last User Mode) file, defaulting to HOME if absent/unreadable. */
