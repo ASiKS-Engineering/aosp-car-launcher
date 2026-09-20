@@ -277,8 +277,10 @@ public class CarLauncher extends FragmentActivity {
                 }
                 container.addView(taskView, 0);
 
-                // Zwingt das TaskView hinter das Menü-Layer
-                taskView.setZOrderOnTop(false);
+                // Zwinge das TaskView hinter das Menü-Layer
+                taskView.setZOrderOnTop(false); 
+				// Erlaube Touches durch transparente Ebenen
+				taskView.setObscuredTouchRegion(null); 
 
                 if (mMapsPlaceholder != null) mMapsPlaceholder.setVisibility(View.GONE);
             }
