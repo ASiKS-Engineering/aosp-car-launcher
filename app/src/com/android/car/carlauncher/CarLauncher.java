@@ -275,7 +275,11 @@ public class CarLauncher extends FragmentActivity {
                 if (taskView.getParent() != null) {
                     ((ViewGroup) taskView.getParent()).removeView(taskView);
                 }
-                container.addView(taskView, 0); 
+                container.addView(taskView, 0);
+
+                // Zwingt das TaskView hinter das Menü-Layer
+                taskView.setZOrderOnTop(false);
+
                 if (mMapsPlaceholder != null) mMapsPlaceholder.setVisibility(View.GONE);
             }
         });
