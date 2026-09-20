@@ -21,7 +21,7 @@
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
-    <!-- Die Karte im Hintergrund (füllt alles aus) -->
+    <!-- Die Karte im Hintergrund -->
     <androidx.cardview.widget.CardView
         android:id="@+id/maps_card"
         android:layout_width="0dp"
@@ -36,10 +36,23 @@
         <FrameLayout
             android:id="@+id/maps_card_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent">
+
+            <!-- WICHTIG: ID wieder hinzugefügt, um Build-Fehler zu beheben -->
+            <TextView
+                android:id="@+id/maps_placeholder_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/navigation_starting"
+                android:textColor="#88FFFFFF"
+                android:textSize="24sp"
+                android:visibility="visible"/>
+        </FrameLayout>
+
     </androidx.cardview.widget.CardView>
 
-    <!-- Hilfslinie bei 33% (begrenzt Widgets auf das linke Drittel) -->
+    <!-- Hilfslinie bei 33% (1/3 des Bildschirms) -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/vertical_guideline"
         android:layout_width="wrap_content"
@@ -47,7 +60,7 @@
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.33" />
 
-    <!-- NUR das Audio-Widget (links fixiert, 1/3 Breite) -->
+    <!-- Audio-Widget (links fixiert, 1/3 Breite) -->
     <com.android.car.ui.FocusArea
         android:id="@+id/bottom_card"
         android:layout_width="0dp"
