@@ -283,7 +283,7 @@ public class CarLauncher extends FragmentActivity {
                 container.addView(taskView, 0);
 
                 // Zwinge das TaskView hinter das Menü-Layer
-                taskView.setZOrderOnTop(true;
+                taskView.setZOrderOnTop(true);
 				// Erlaube Touches durch transparente Ebenen
 				taskView.setObscuredTouchRegion(null); 
 
