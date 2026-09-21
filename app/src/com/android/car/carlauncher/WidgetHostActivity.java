@@ -367,11 +367,9 @@ public class WidgetHostActivity extends AppCompatActivity {
                 }
             }
         }
-        boolean hasBottomCard = mHomeCardModules.stream().peek(cardModule -> {
-            if (cardModule.getCardResId() == R.id.top_card) {
-                Log.e(TAG, "Top card is not supported in widget host.");
-            }
-        }).anyMatch(cardModule -> cardModule.getCardResId() == R.id.bottom_card);
+        boolean hasBottomCard = mHomeCardModules.stream()
+                .anyMatch(cardModule -> cardModule.getCardResId() == R.id.bottom_card);
+
         View bottomCard = findViewById(R.id.bottom_card);
         if (bottomCard != null) {
             bottomCard.setVisibility(hasBottomCard ? View.VISIBLE : View.GONE);

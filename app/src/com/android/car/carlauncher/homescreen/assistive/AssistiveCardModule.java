@@ -43,7 +43,8 @@ public class AssistiveCardModule implements HomeCardModule {
 
     @Override
     public int getCardResId() {
-        return R.id.top_card;
+        // Mappe auf View.NO_ID, da top_card nicht mehr existiert
+        return android.view.View.NO_ID;
     }
 
     @Override
