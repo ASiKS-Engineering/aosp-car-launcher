@@ -65,7 +65,7 @@ public class CarLauncherUtils {
         return new Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_APP_MAPS)
                 .setComponent(component)
-                .putExtra(EXTRA_NAVIGATION_UI_MODE, readPersistedNavigationUiMode(context));
+                .putExtra(EXTRA_NAVIGATION_UI_MODE, readPersistedNavigationUiMode(context))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
