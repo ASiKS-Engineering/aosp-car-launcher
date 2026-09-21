@@ -203,6 +203,8 @@ public class CarLauncher extends FragmentActivity {
                 mMapsCard = findViewById(R.id.maps_card);
                 mMapsPlaceholder = findViewById(R.id.maps_placeholder_text);
 
+                mNavUiMode = resolveInitialNavUiMode(getIntent());
+
                 if (mMapsCard != null) {
                     setupRemoteCarTaskView(mMapsCard);
                     setupContentObserversForTos();
@@ -212,10 +214,15 @@ public class CarLauncher extends FragmentActivity {
                 ContextCompat.registerReceiver(this, mNavUiModeReceiver,
                         new IntentFilter(CarLauncherUtils.ACTION_NAVIGATION_UI_MODE_CHANGED),
                         ContextCompat.RECEIVER_EXPORTED);
+
+                // Broadcast Receiver für Shutdown registrieren
+                ContextCompat.registerReceiver(this, mShutdownReceiver,
+                        new IntentFilter(Intent.ACTION_SHUTDOWN),
+                        ContextCompat.RECEIVER_NOT_EXPORTED);
+
                 mNavUiModeReceiverRegistered = true;
 
-                // Modus aus Speicher laden und Cards initialisieren (KEIN Broadcast beim Start!)
-                mNavUiMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
+                // Cards initialisieren mit dem beim Boot ermittelten Modus (kein Broadcast beim Start).
                 initializeCards();
             }
         } else {
@@ -230,6 +237,15 @@ public class CarLauncher extends FragmentActivity {
 
         // Finale UI-Aktualisierung
         initializeCards();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        String requestedMode = resolveInitialNavUiMode(intent);
+        applyNavUiMode(requestedMode);
     }
 
     private void setupRemoteCarTaskView(ViewGroup parent) {
@@ -288,17 +304,37 @@ public class CarLauncher extends FragmentActivity {
 
     /**
      * Applies the given navigation UI mode (HOME embedded vs. FULLSCREEN) to CarLauncher's own
-     * home cards, persists it as the LUM (Last User Mode), and notifies CamperNavigator so both
-     * UIs stay in lock-step. The embedded nav instance itself is never restarted.
+     * home cards and notifies CamperNavigator so both UIs stay in lock-step. The embedded nav
+     * instance itself is never restarted. Mode is persisted to LUM only at system shutdown.
      */
     private void applyNavUiMode(String mode) {
         if (mode.equals(mNavUiMode)) {
             return;
         }
         mNavUiMode = mode;
-        CarLauncherUtils.persistNavigationUiMode(this, mode);
         initializeCards();
         CarLauncherUtils.setNavigationUiMode(this, mode);
+    }
+
+    private final BroadcastReceiver mShutdownReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Intent.ACTION_SHUTDOWN.equals(intent.getAction())) {
+                CarLauncherUtils.persistNavigationUiMode(context, mNavUiMode);
+                Log.d(TAG, "Persisted navigation UI mode to LUM on shutdown: " + mNavUiMode);
+            }
+        }
+    };
+
+    private String resolveInitialNavUiMode(Intent intent) {
+        String requestedMode = intent != null
+                ? intent.getStringExtra(CarLauncherUtils.EXTRA_NAVIGATION_UI_MODE)
+                : null;
+        if (CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(requestedMode)
+                || CarLauncherUtils.NAVIGATION_UI_MODE_HOME.equals(requestedMode)) {
+            return requestedMode;
+        }
+        return CarLauncherUtils.readPersistedNavigationUiMode(this);
     }
 
     @Override
@@ -318,6 +354,7 @@ public class CarLauncher extends FragmentActivity {
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(mTaskStackListener);
         if (mNavUiModeReceiverRegistered) {
             unregisterReceiver(mNavUiModeReceiver);
+            unregisterReceiver(mShutdownReceiver);
             mNavUiModeReceiverRegistered = false;
         }
         unregisterTosContentObserver();

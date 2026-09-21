@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-  ~ Copyright (C) 2021 The Android Open Source Project
+  ~ Copyright (C) 2024 The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:layout_gravity="bottom"
-        android:background="@drawable/control_bar_background">
+        android:background="@android:color/transparent">
 
         <!-- HVAC LEFT -->
         <LinearLayout
@@ -187,7 +187,7 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-      <LinearLayout
+    <LinearLayout
         android:id="@+id/navigation_loading_overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -199,18 +199,18 @@
         android:visibility="gone">
 
         <TextView
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="@string/navigation_starting"
-          android:textColor="@android:color/white"
-          android:textSize="20sp" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/navigation_starting"
+            android:textColor="@android:color/white"
+            android:textSize="20sp" />
 
         <ProgressBar
-          android:layout_width="240dp"
-          android:layout_height="wrap_content"
-          android:layout_marginTop="16dp"
-          android:indeterminate="true"
-          style="?android:attr/progressBarStyleHorizontal" />
-      </LinearLayout>
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:indeterminate="true"
+            style="?android:attr/progressBarStyleHorizontal" />
+    </LinearLayout>
 
-    </FrameLayout>
+</FrameLayout>

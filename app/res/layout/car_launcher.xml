@@ -38,7 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <!-- WICHTIG: ID wieder hinzugefügt, um Build-Fehler zu beheben -->
+            <!-- IMPORTANT: ID re-added to fix build error -->
             <TextView
                 android:id="@+id/maps_placeholder_text"
                 android:layout_width="wrap_content"
