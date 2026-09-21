@@ -163,85 +163,72 @@ public class CarLauncher extends FragmentActivity {
         }
         getTheme().applyStyle(R.style.CarLauncherActivityThemeOverlay, true);
 
-        // TODO(b/408491355): remove `isDewdActive()` checks and clean up legacy logic when all
-        //   targets are migrated to DEWD.
+        // Check für DEWD Launcher
         if (isDewdActive()) {
             if (DEBUG) {
                 Log.d(TAG, "Dewd Launcher active");
             }
-
             if (!scalableUi()) {
                 Log.e(TAG, "Scalable UI is disabled - home screen will appear empty!");
             }
-
             setContentView(R.layout.home);
             return;
         }
 
-        // Since MUMD/MUPAND is introduced, CarLauncher can be called in the main display of
-        // visible background users.
-        // For Passenger scenarios, replace the maps_card with AppGridActivity, as currently
-        // there is no maps use-case for passengers.
-        boolean isPassengerDisplay = isPassengerDisplay();
-
-        // Don't show the maps panel in multi window mode.
-        // NOTE: CTS tests for split screen are not compatible with activity views on the
-        // default activity of the launcher
+        // 1. Zuerst das Layout basierend auf dem Modus wählen (Wichtig für RPi5)
         if (isInMultiWindowMode() || isInPictureInPictureMode()) {
             setContentView(R.layout.car_launcher_multiwindow);
-            // Auch im Multi-Window Modus die Karte suchen
-            mMapsCard = findViewById(R.id.maps_card);
         } else {
             setContentView(R.layout.car_launcher);
-            // Passenger displays do not require TaskView Embedding
-            if (!isPassengerDisplay) {
-                mUseSmallCanvasOptimizedMap =
-                        CarLauncherUtils.isSmallCanvasOptimizedMapIntentConfigured(this);
-
-                mActivityManager = getSystemService(ActivityManager.class);
-                mCarLauncherTaskId = getTaskId();
-                TaskStackChangeListeners.getInstance().registerTaskStackListener(
-                        mTaskStackListener);
-
-                // Setting as trusted overlay to let touches pass through.
-                getWindow().addPrivateFlags(PRIVATE_FLAG_TRUSTED_OVERLAY);
-                // To pass touches to the underneath task.
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
-                // We don't want to show Map card unnecessarily for the headless user 0
-                if (!UserHelperLite.isHeadlessSystemUser(getUserId())) {
-                    mMapsCard = findViewById(R.id.maps_card);
-                    mMapsPlaceholder = findViewById(R.id.maps_placeholder_text);
-                    if (mMapsCard != null) {
-                        setupRemoteCarTaskView(mMapsCard);
-                        setupContentObserversForTos();
-                    }
-
-                    ContextCompat.registerReceiver(this, mNavUiModeReceiver,
-                            new IntentFilter(CarLauncherUtils.ACTION_NAVIGATION_UI_MODE_CHANGED),
-                            ContextCompat.RECEIVER_EXPORTED);
-                    mNavUiModeReceiverRegistered = true;
-
-                    // Restore the LUM (Last User Mode) from the previous session/boot and apply
-                    // it to CarLauncher's own home cards. CamperNavigator restores its own UI
-                    // independently from the mode extra baked into the maps intent (see
-                    // CarLauncherUtils#getCamperNavigatorIntent), so no broadcast is needed here.
-                    // KORREKTUR: Nur Variable setzen und UI initialisieren, KEIN Broadcast beim Boot/Start
-                    mNavUiMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
-                    initializeCards();
-                }
-            } else {
-                // For Passenger display show the AppGridFragment in place of the Maps view.
-                // Also we can skip initializing all the TaskView related objects as they are
-                // not used in this case.
-                getSupportFragmentManager().beginTransaction().replace(R.id.maps_card,
-                        AppGridFragment.newInstance(ALL_APPS)).commit();
-
-            }
         }
 
+        boolean isPassengerDisplay = isPassengerDisplay();
+
+        // 2. Gemeinsame System-Initialisierung (Fokus, Flags, Listener)
+        if (!isPassengerDisplay) {
+            mUseSmallCanvasOptimizedMap =
+                    CarLauncherUtils.isSmallCanvasOptimizedMapIntentConfigured(this);
+
+            mActivityManager = getSystemService(ActivityManager.class);
+            mCarLauncherTaskId = getTaskId();
+            TaskStackChangeListeners.getInstance().registerTaskStackListener(
+                    mTaskStackListener);
+
+            // Trusted Overlay setzen für Touch-Passthrough zur Karte
+            getWindow().addPrivateFlags(PRIVATE_FLAG_TRUSTED_OVERLAY);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
+
+            // 3. Karten-Initialisierung (TaskView) - JETZT FÜR BEIDE MODI AKTIV
+            if (!UserHelperLite.isHeadlessSystemUser(getUserId())) {
+                mMapsCard = findViewById(R.id.maps_card);
+                mMapsPlaceholder = findViewById(R.id.maps_placeholder_text);
+
+                if (mMapsCard != null) {
+                    setupRemoteCarTaskView(mMapsCard);
+                    setupContentObserversForTos();
+                }
+
+                // Broadcast Receiver für in-place Modus-Wechsel registrieren
+                ContextCompat.registerReceiver(this, mNavUiModeReceiver,
+                        new IntentFilter(CarLauncherUtils.ACTION_NAVIGATION_UI_MODE_CHANGED),
+                        ContextCompat.RECEIVER_EXPORTED);
+                mNavUiModeReceiverRegistered = true;
+
+                // Modus aus Speicher laden und Cards initialisieren (KEIN Broadcast beim Start!)
+                mNavUiMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
+                initializeCards();
+            }
+        } else {
+            // Spezialfall Beifahrer: App-Grid statt Karte anzeigen
+            getSupportFragmentManager().beginTransaction().replace(R.id.maps_card,
+                    AppGridFragment.newInstance(ALL_APPS)).commit();
+        }
+
+        // Router für Media und Telefonie registrieren
         MediaLaunchRouter.getInstance().registerMediaLaunchHandler(mMediaMediaLaunchHandler);
         InCallIntentRouter.getInstance().registerInCallIntentHandler(mIntentHandler);
 
+        // Finale UI-Aktualisierung
         initializeCards();
     }
 
