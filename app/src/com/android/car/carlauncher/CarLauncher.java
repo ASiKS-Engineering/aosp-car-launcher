@@ -156,6 +156,10 @@ public class CarLauncher extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // FIX 1: Fenster-Transparenz für den gesamten Launcher erzwingen
+        // Ermöglicht es der Karte (im Hintergrund), durch das Launcher-Layout zu scheinen
+        getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
         if (DEBUG) {
@@ -163,11 +167,9 @@ public class CarLauncher extends FragmentActivity {
         }
         getTheme().applyStyle(R.style.CarLauncherActivityThemeOverlay, true);
 
-        // Check für DEWD Launcher
+        // Check für DEWD Launcher (Scalable UI)
         if (isDewdActive()) {
-            if (DEBUG) {
-                Log.d(TAG, "Dewd Launcher active");
-            }
+            if (DEBUG) Log.d(TAG, "Dewd Launcher active");
             if (!scalableUi()) {
                 Log.e(TAG, "Scalable UI is disabled - home screen will appear empty!");
             }
@@ -175,7 +177,7 @@ public class CarLauncher extends FragmentActivity {
             return;
         }
 
-        // 1. Zuerst das Layout basierend auf dem Modus wählen (Wichtig für RPi5)
+        // 1. Layout EINMALIG laden (Wichtig für RPi5: Multi-Window Check)
         if (isInMultiWindowMode() || isInPictureInPictureMode()) {
             setContentView(R.layout.car_launcher_multiwindow);
         } else {
@@ -186,23 +188,21 @@ public class CarLauncher extends FragmentActivity {
 
         // 2. Gemeinsame System-Initialisierung (Fokus, Flags, Listener)
         if (!isPassengerDisplay) {
-            mUseSmallCanvasOptimizedMap =
-                    CarLauncherUtils.isSmallCanvasOptimizedMapIntentConfigured(this);
-
+            mUseSmallCanvasOptimizedMap = CarLauncherUtils.isSmallCanvasOptimizedMapIntentConfigured(this);
             mActivityManager = getSystemService(ActivityManager.class);
             mCarLauncherTaskId = getTaskId();
-            TaskStackChangeListeners.getInstance().registerTaskStackListener(
-                    mTaskStackListener);
+            TaskStackChangeListeners.getInstance().registerTaskStackListener(mTaskStackListener);
 
-            // Trusted Overlay setzen für Touch-Passthrough zur Karte
+            // Trusted Overlay setzen für Touch-Passthrough zur Navi-Karte
             getWindow().addPrivateFlags(PRIVATE_FLAG_TRUSTED_OVERLAY);
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
 
-            // 3. Karten-Initialisierung (TaskView) - JETZT FÜR BEIDE MODI AKTIV
+            // 3. Karten-Initialisierung (TaskView) - EINMALIG FÜR ALLE MODI
             if (!UserHelperLite.isHeadlessSystemUser(getUserId())) {
                 mMapsCard = findViewById(R.id.maps_card);
                 mMapsPlaceholder = findViewById(R.id.maps_placeholder_text);
 
+                // Initialen Modus laden (aus Intent oder LUM-Speicher)
                 mNavUiMode = resolveInitialNavUiMode(getIntent());
 
                 if (mMapsCard != null) {
@@ -210,20 +210,20 @@ public class CarLauncher extends FragmentActivity {
                     setupContentObserversForTos();
                 }
 
-                // Broadcast Receiver für in-place Modus-Wechsel registrieren
+                // Broadcast Receiver für Modus-Wechsel (In-Place Umschaltung)
                 ContextCompat.registerReceiver(this, mNavUiModeReceiver,
                         new IntentFilter(CarLauncherUtils.ACTION_NAVIGATION_UI_MODE_CHANGED),
                         ContextCompat.RECEIVER_EXPORTED);
 
-                // Broadcast Receiver für Shutdown registrieren
+                // Broadcast Receiver für Shutdown (LUM Speicherung)
                 ContextCompat.registerReceiver(this, mShutdownReceiver,
                         new IntentFilter(Intent.ACTION_SHUTDOWN),
                         ContextCompat.RECEIVER_NOT_EXPORTED);
 
                 mNavUiModeReceiverRegistered = true;
 
-                // Cards initialisieren mit dem beim Boot ermittelten Modus (kein Broadcast beim Start).
-                initializeCards();
+                // UI-Zustand (Widgets & Padding) sofort anwenden
+                applyNavUiMode(mNavUiMode);
             }
         } else {
             // Spezialfall Beifahrer: App-Grid statt Karte anzeigen
@@ -235,10 +235,9 @@ public class CarLauncher extends FragmentActivity {
         MediaLaunchRouter.getInstance().registerMediaLaunchHandler(mMediaMediaLaunchHandler);
         InCallIntentRouter.getInstance().registerInCallIntentHandler(mIntentHandler);
 
-        // Finale UI-Aktualisierung
+        // Finale Initialisierung der Cards (Audio-Modul)
         initializeCards();
     }
-
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -276,16 +275,16 @@ public class CarLauncher extends FragmentActivity {
             
             // Container finden (unser FrameLayout)
             ViewGroup container = findViewById(R.id.maps_card_container);
-            if (container != null) {
+            if (container != null && taskView != null) {
                 if (taskView.getParent() != null) {
                     ((ViewGroup) taskView.getParent()).removeView(taskView);
                 }
                 container.addView(taskView, 0);
 
-                // Zwinge das TaskView hinter das Menü-Layer
-                taskView.setZOrderOnTop(true);
-				// Erlaube Touches durch transparente Ebenen
-				taskView.setObscuredTouchRegion(null); 
+                // FIX 4: Die Karte hinter den Launcher schieben, aber sichtbar halten
+                taskView.setZOrderOnTop(false);
+                taskView.setZOrderMediaOverlay(true);
+                taskView.setObscuredTouchRegion(null);
 
                 if (mMapsPlaceholder != null) mMapsPlaceholder.setVisibility(View.GONE);
             }
@@ -308,10 +307,16 @@ public class CarLauncher extends FragmentActivity {
      * instance itself is never restarted. Mode is persisted to LUM only at system shutdown.
      */
     private void applyNavUiMode(String mode) {
-        if (mode.equals(mNavUiMode)) {
-            return;
-        }
+        Log.d(TAG, "applyNavUiMode: Modus wird gewechselt zu -> " + mode);
         mNavUiMode = mode;
+        boolean fullscreen = CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode);
+
+        // FIX 3: Harte Sichtbarkeits-Steuerung für das Audio-Widget
+        View audioCard = findViewById(R.id.bottom_card);
+        if (audioCard != null) {
+            audioCard.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
+        }
+
         initializeCards();
         CarLauncherUtils.setNavigationUiMode(this, mode);
     }
