@@ -149,15 +149,11 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
     @Override
     public void onResume(@NonNull LifecycleOwner owner) {
         DefaultLifecycleObserver.super.onResume(owner);
-        // Do not trigger 'hostAppeared()' in onResume.
-        // If the host Activity was hidden by an Activity, the Activity is moved to the other
-        // display, what the system expects would be the new moved Activity becomes the top one.
-        // But, at the time, the host Activity became visible and 'onResume()' is triggered.
-        // If 'hostAppeared()' is called in onResume, which moves the embeddedTask to the top and
-        // breaks the contract (the newly moved Activity becomes top).
-        // The contract is maintained by android.server.wm.multidisplay.MultiDisplayClientTests.
-        // BTW, if we don't invoke 'hostAppeared()', which makes the embedded task invisible if
-        // the host Activity gets the new Intent, so we'd call 'hostAppeared()' in onNewIntent.
+        // Upstream AOSP skips this call to avoid stealing focus on multi-display setups, but on
+        // this single-display head unit that leaves the embedded task permanently invisible after
+        // any onStop/onResume cycle (cold boot, app relaunch, dialogs) that isn't followed by a
+        // real onNewIntent. Re-asserting appeared state here is idempotent and keeps HOME in sync.
+        mHostLifecycle.hostAppeared();
     }
 
     @Override
