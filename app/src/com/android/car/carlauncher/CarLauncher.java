@@ -153,31 +153,23 @@ public class CarLauncher extends FragmentActivity {
         mediaSource.launchActivity(CarLauncher.this, ActivityOptions.makeBasic());
     };
 
+    // 2. Der gesäuberte onCreate-Block (Lösche ALLES Alte in onCreate!)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // FIX 1: Fenster-Transparenz für den gesamten Launcher erzwingen
-        // Ermöglicht es der Karte (im Hintergrund), durch das Launcher-Layout zu scheinen
+        // Fenster-Transparenz
         getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
-        if (DEBUG) {
-            Log.d(TAG, "onCreate(" + getUserId() + ") displayId=" + getDisplayId());
-        }
         getTheme().applyStyle(R.style.CarLauncherActivityThemeOverlay, true);
 
-        // Check für DEWD Launcher (Scalable UI)
         if (isDewdActive()) {
-            if (DEBUG) Log.d(TAG, "Dewd Launcher active");
-            if (!scalableUi()) {
-                Log.e(TAG, "Scalable UI is disabled - home screen will appear empty!");
-            }
             setContentView(R.layout.home);
             return;
         }
 
-        // 1. Layout EINMALIG laden (Wichtig für RPi5: Multi-Window Check)
+        // Layout EINMALIG wählen
         if (isInMultiWindowMode() || isInPictureInPictureMode()) {
             setContentView(R.layout.car_launcher_multiwindow);
         } else {
@@ -186,58 +178,55 @@ public class CarLauncher extends FragmentActivity {
 
         boolean isPassengerDisplay = isPassengerDisplay();
 
-        // 2. Gemeinsame System-Initialisierung (Fokus, Flags, Listener)
         if (!isPassengerDisplay) {
             mUseSmallCanvasOptimizedMap = CarLauncherUtils.isSmallCanvasOptimizedMapIntentConfigured(this);
             mActivityManager = getSystemService(ActivityManager.class);
             mCarLauncherTaskId = getTaskId();
             TaskStackChangeListeners.getInstance().registerTaskStackListener(mTaskStackListener);
 
-            // Trusted Overlay setzen für Touch-Passthrough zur Navi-Karte
             getWindow().addPrivateFlags(PRIVATE_FLAG_TRUSTED_OVERLAY);
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
 
-            // 3. Karten-Initialisierung (TaskView) - EINMALIG FÜR ALLE MODI
             if (!UserHelperLite.isHeadlessSystemUser(getUserId())) {
                 mMapsCard = findViewById(R.id.maps_card);
                 mMapsPlaceholder = findViewById(R.id.maps_placeholder_text);
 
-                // Initialen Modus laden (aus Intent oder LUM-Speicher)
-                mNavUiMode = resolveInitialNavUiMode(getIntent());
+                // LUM Modus laden
+                mNavUiMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
 
                 if (mMapsCard != null) {
                     setupRemoteCarTaskView(mMapsCard);
                     setupContentObserversForTos();
                 }
 
-                // Broadcast Receiver für Modus-Wechsel (In-Place Umschaltung)
+                // Receiver registrieren
                 ContextCompat.registerReceiver(this, mNavUiModeReceiver,
                         new IntentFilter(CarLauncherUtils.ACTION_NAVIGATION_UI_MODE_CHANGED),
                         ContextCompat.RECEIVER_EXPORTED);
-
-                // Broadcast Receiver für Shutdown (LUM Speicherung)
-                ContextCompat.registerReceiver(this, mShutdownReceiver,
-                        new IntentFilter(Intent.ACTION_SHUTDOWN),
-                        ContextCompat.RECEIVER_NOT_EXPORTED);
-
                 mNavUiModeReceiverRegistered = true;
 
-                // UI-Zustand (Widgets & Padding) sofort anwenden
-                applyNavUiMode(mNavUiMode);
+                // UI-Zustand initial ohne Broadcast setzen
+                updateInternalUiState(mNavUiMode);
             }
         } else {
-            // Spezialfall Beifahrer: App-Grid statt Karte anzeigen
             getSupportFragmentManager().beginTransaction().replace(R.id.maps_card,
                     AppGridFragment.newInstance(ALL_APPS)).commit();
         }
 
-        // Router für Media und Telefonie registrieren
         MediaLaunchRouter.getInstance().registerMediaLaunchHandler(mMediaMediaLaunchHandler);
         InCallIntentRouter.getInstance().registerInCallIntentHandler(mIntentHandler);
-
-        // Finale Initialisierung der Cards (Audio-Modul)
         initializeCards();
     }
+
+    // Hilfsmethode, um die UI zu updaten ohne eine Nachrichtenschleife zu triggern
+    private void updateInternalUiState(String mode) {
+        boolean fullscreen = CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mode);
+        View audioCard = findViewById(R.id.bottom_card);
+        if (audioCard != null) {
+            audioCard.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
+        }
+    }
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -307,11 +296,14 @@ public class CarLauncher extends FragmentActivity {
      * instance itself is never restarted. Mode is persisted to LUM only at system shutdown.
      */
     private void applyNavUiMode(String mode) {
+        // WICHTIG: Schutzprüfung gegen Endlosschleifen!
+        if (mode == null || mode.equals(mNavUiMode)) {
+            return;
+        }
         Log.d(TAG, "applyNavUiMode: Modus wird gewechselt zu -> " + mode);
         mNavUiMode = mode;
         boolean fullscreen = CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode);
 
-        // FIX 3: Harte Sichtbarkeits-Steuerung für das Audio-Widget
         View audioCard = findViewById(R.id.bottom_card);
         if (audioCard != null) {
             audioCard.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
