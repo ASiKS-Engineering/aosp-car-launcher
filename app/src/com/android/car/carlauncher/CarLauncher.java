@@ -347,7 +347,7 @@ public class CarLauncher extends FragmentActivity {
 		CarLauncherUtils.broadcastNavigationUiMode(this, mode);
 	}
 
-    private final BroadcastReceiver mShutdownReceiver = new BroadcastReceiver() {
+    /*private final BroadcastReceiver mShutdownReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (Intent.ACTION_SHUTDOWN.equals(intent.getAction())) {
@@ -355,7 +355,7 @@ public class CarLauncher extends FragmentActivity {
                 Log.d(TAG, "Persisted navigation UI mode to LUM on shutdown: " + mNavUiMode);
             }
         }
-    };
+    };*/
 
     private String resolveInitialNavUiMode(Intent intent) {
         String requestedMode = intent != null
