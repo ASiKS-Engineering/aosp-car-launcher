@@ -192,9 +192,8 @@ public class CarLauncher extends FragmentActivity {
                 mMapsPlaceholder = findViewById(R.id.maps_placeholder_text);
 
                 // LUM Modus laden
-                //mNavUiMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
-				mNavUiMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
-
+				String persistedMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
+				mNavUiMode = persistedMode;
 				updateNavigationLayerUi();
 
                 if (mMapsCard != null) {
