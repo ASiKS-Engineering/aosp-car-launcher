@@ -59,15 +59,14 @@ public class CarLauncherUtils {
         return new Intent(ACTION_APP_GRID);
     }
 
-    public static Intent getCamperNavigatorIntent(Context context) {
-        ComponentName component = ComponentName.unflattenFromString(
-                context.getString(R.string.config_camperNavigatorComponent));
-        return new Intent(Intent.ACTION_MAIN)
-                .addCategory(Intent.CATEGORY_APP_MAPS)
-                .setComponent(component)
-                .putExtra(EXTRA_NAVIGATION_UI_MODE, getCurrentNavigationUiMode(context))
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
-    }
+	public static Intent getCamperNavigatorIntent(Context context) {
+		ComponentName component = ComponentName.unflattenFromString(
+				context.getString(R.string.config_camperNavigatorComponent));
+		return new Intent(Intent.ACTION_MAIN)
+				.addCategory(Intent.CATEGORY_APP_MAPS)
+				.setComponent(component)
+				.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+	}
 
     /** Reads the LUM (Last User Mode) file, defaulting to HOME if absent/unreadable. */
     public static String readPersistedNavigationUiMode(Context context) {
