@@ -290,9 +290,9 @@ public class CarLauncher extends FragmentActivity {
                 }
                 container.addView(taskView, 0);
 
-                // FIX 4: Die Karte hinter den Launcher schieben, aber sichtbar halten
-                taskView.setZOrderOnTop(false);
-                taskView.setZOrderMediaOverlay(true);
+                // FIX 4: Z-Order anpassen für korrektes Surface-Compositing von MapLibre
+                taskView.setZOrderOnTop(true);
+                taskView.setZOrderMediaOverlay(false);
                 taskView.setObscuredTouchRegion(null);
 
                 if (mMapsPlaceholder != null) mMapsPlaceholder.setVisibility(View.GONE);
