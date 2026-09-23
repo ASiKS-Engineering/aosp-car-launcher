@@ -65,7 +65,7 @@ public class CarLauncherUtils {
         return new Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_APP_MAPS)
                 .setComponent(component)
-                .putExtra(EXTRA_NAVIGATION_UI_MODE, readPersistedNavigationUiMode(context))
+                .putExtra(EXTRA_NAVIGATION_UI_MODE, getCurrentNavigationUiMode(context))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
     }
 
@@ -144,12 +144,14 @@ public class CarLauncherUtils {
 	 * #ACTION_NAVIGATION_UI_MODE_CHANGED}, so a single call keeps both UIs in sync without
 	 * ever starting/restarting an activity.
 	 */
-	public static void setNavigationUiMode(Context context, String mode) {
-		Intent modeIntent = new Intent(ACTION_NAVIGATION_UI_MODE_CHANGED)
-				.putExtra(EXTRA_NAVIGATION_UI_MODE, mode);
-		context.sendBroadcast(modeIntent);
+	public static void broadcastNavigationUiMode(
+			Context context,
+			String mode) {
 
-		Log.i(TAG, "Navigation UI mode changed to " + mode);
+		Intent intent = new Intent(ACTION_NAVIGATION_UI_MODE_CHANGED)
+				.putExtra(EXTRA_NAVIGATION_UI_MODE, mode);
+
+		context.sendBroadcast(intent);
 	}
 
     /**

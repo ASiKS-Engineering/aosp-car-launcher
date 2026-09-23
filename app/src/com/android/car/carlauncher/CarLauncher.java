@@ -192,7 +192,10 @@ public class CarLauncher extends FragmentActivity {
                 mMapsPlaceholder = findViewById(R.id.maps_placeholder_text);
 
                 // LUM Modus laden
-                mNavUiMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
+                //mNavUiMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
+				mNavUiMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
+
+				updateNavigationLayerUi();
 
                 if (mMapsCard != null) {
                     setupRemoteCarTaskView(mMapsCard);
@@ -227,14 +230,19 @@ public class CarLauncher extends FragmentActivity {
         }
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
+	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+		setIntent(intent);
 
-        String requestedMode = resolveInitialNavUiMode(intent);
-        applyNavUiMode(requestedMode);
-    }
+		String requestedMode = intent != null
+				? intent.getStringExtra(CarLauncherUtils.EXTRA_NAVIGATION_UI_MODE)
+				: null;
+
+		if (requestedMode != null) {
+			applyNavUiMode(requestedMode);
+		}
+	}
 
     private void setupRemoteCarTaskView(ViewGroup parent) {
         mCarLauncherViewModel = new ViewModelProvider(this,
@@ -295,23 +303,49 @@ public class CarLauncher extends FragmentActivity {
      * home cards and notifies CamperNavigator so both UIs stay in lock-step. The embedded nav
      * instance itself is never restarted. Mode is persisted to LUM only at system shutdown.
      */
-    private void applyNavUiMode(String mode) {
-        // WICHTIG: Schutzprüfung gegen Endlosschleifen!
-        if (mode == null || mode.equals(mNavUiMode)) {
-            return;
-        }
-        Log.d(TAG, "applyNavUiMode: Modus wird gewechselt zu -> " + mode);
-        mNavUiMode = mode;
-        boolean fullscreen = CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode);
+	private void applyNavUiMode(String mode) {
+		if (!isValidNavUiMode(mode)) {
+			return;
+		}
 
-        View audioCard = findViewById(R.id.bottom_card);
-        if (audioCard != null) {
-            audioCard.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
-        }
+		if (mode.equals(mNavUiMode)) {
+			updateNavigationLayerUi();
+			return;
+		}
 
-        initializeCards();
-        CarLauncherUtils.setNavigationUiMode(this, mode);
-    }
+		Log.d(TAG, "Navigation UI mode -> " + mode);
+
+		mNavUiMode = mode;
+		updateNavigationLayerUi();
+	}
+
+	private void updateNavigationLayerUi() {
+		boolean fullscreen =
+				CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode);
+
+		View audioCard = findViewById(R.id.bottom_card);
+		if (audioCard != null) {
+			audioCard.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
+		}
+
+		initializeCards();
+	}
+
+	private boolean isValidNavUiMode(String mode) {
+		return CarLauncherUtils.NAVIGATION_UI_MODE_HOME.equals(mode)
+				|| CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mode);
+	}
+
+	private void requestNavUiMode(String mode) {
+		if (!isValidNavUiMode(mode)) {
+			return;
+		}
+
+		mNavUiMode = mode;
+		updateNavigationLayerUi();
+
+		CarLauncherUtils.broadcastNavigationUiMode(this, mode);
+	}
 
     private final BroadcastReceiver mShutdownReceiver = new BroadcastReceiver() {
         @Override
@@ -349,11 +383,11 @@ public class CarLauncher extends FragmentActivity {
         }
 
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(mTaskStackListener);
-        if (mNavUiModeReceiverRegistered) {
-            unregisterReceiver(mNavUiModeReceiver);
-            unregisterReceiver(mShutdownReceiver);
-            mNavUiModeReceiverRegistered = false;
-        }
+        //if (mNavUiModeReceiverRegistered) {
+        //    unregisterReceiver(mNavUiModeReceiver);
+        //    unregisterReceiver(mShutdownReceiver);
+        //    mNavUiModeReceiverRegistered = false;
+        //}
         unregisterTosContentObserver();
         release();
     }

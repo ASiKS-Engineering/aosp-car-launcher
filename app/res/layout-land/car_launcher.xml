@@ -21,7 +21,9 @@
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
-    <!-- Karte im Hintergrund -->
+    <!-- Permanenter Navi Layer:
+     Navigator wird hier als RemoteCarTaskView eingebettet.
+     Audio (bottom_card) liegt darüber. -->
     <androidx.cardview.widget.CardView
         android:id="@+id/maps_card"
         android:layout_width="0dp"
