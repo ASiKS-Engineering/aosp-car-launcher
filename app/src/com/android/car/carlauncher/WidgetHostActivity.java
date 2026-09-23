@@ -321,9 +321,7 @@ public class WidgetHostActivity extends AppCompatActivity {
 
     private void openHome() {
         hideNavigationLoading();
-        CarLauncherUtils.setNavigationUiMode(
-        this,
-        CarLauncherUtils.NAVIGATION_UI_MODE_HOME);
+        CarLauncherUtils.requestNavigationUiMode(this, CarLauncherUtils.NAVIGATION_UI_MODE_HOME);
         Intent homeIntent = new Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_HOME)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -333,7 +331,7 @@ public class WidgetHostActivity extends AppCompatActivity {
     private void startCamperNavigator() {
         mNavigationHandler.removeCallbacksAndMessages(null);
         hideNavigationLoading();
-        CarLauncherUtils.setNavigationUiMode(this, CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN);
+        CarLauncherUtils.requestNavigationUiMode(this, CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN);
     }
 
     private void showNavigationLoading() {

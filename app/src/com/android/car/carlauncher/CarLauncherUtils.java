@@ -96,6 +96,18 @@ public class CarLauncherUtils {
         }
     }
 
+	public static void requestNavigationUiMode(Context context, String mode) {
+		Intent intent = new Intent(
+				"com.asiks.camper.navigator.action.SET_MODE");
+		intent.putExtra(
+				"com.asiks.camper.navigator.extra.MODE",
+				mode);
+		intent.putExtra(
+				"com.asiks.camper.navigator.extra.APPLY_SCREEN_TRANSITION",
+				true);
+		context.sendBroadcast(intent);
+	}
+
     public static boolean isCamperNavigatorAvailable(Context context) {
         Intent intent = getCamperNavigatorIntent(context);
         return intent.resolveActivity(context.getPackageManager()) != null;
@@ -135,24 +147,6 @@ public class CarLauncherUtils {
         }
         return maybeReplaceWithTosMapIntent(context, defaultIntent);
     }
-
-	/**
-	 * Broadcasts the active Automotive navigation UI mode (HOME embedded vs. FULLSCREEN).
-	 *
-	 * <p>Deliberately an implicit (component-less) broadcast: both CarLauncher itself and
-	 * CamperNavigator hold a dynamically registered receiver for {@link
-	 * #ACTION_NAVIGATION_UI_MODE_CHANGED}, so a single call keeps both UIs in sync without
-	 * ever starting/restarting an activity.
-	 */
-	public static void broadcastNavigationUiMode(
-			Context context,
-			String mode) {
-
-		Intent intent = new Intent(ACTION_NAVIGATION_UI_MODE_CHANGED)
-				.putExtra(EXTRA_NAVIGATION_UI_MODE, mode);
-
-		context.sendBroadcast(intent);
-	}
 
     /**
      * Returns {@code true} if a proper limited map intent is configured via

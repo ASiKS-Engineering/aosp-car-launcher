@@ -191,25 +191,27 @@ public class CarLauncher extends FragmentActivity {
                 mMapsCard = findViewById(R.id.maps_card);
                 mMapsPlaceholder = findViewById(R.id.maps_placeholder_text);
 
-                // LUM Modus laden
+                // Load LUm mode
 				String persistedMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
 				mNavUiMode = persistedMode;
 				updateNavigationLayerUi();
+
+				// Register receiver
+				ContextCompat.registerReceiver(
+						this,
+						mNavUiModeReceiver,
+						new IntentFilter(
+								CarLauncherUtils.ACTION_NAVIGATION_UI_MODE_CHANGED),
+						ContextCompat.RECEIVER_EXPORTED);
+
+				mNavUiModeReceiverRegistered = true;
+				
+				syncNavUiModeToService(mNavUiMode);
 
                 if (mMapsCard != null) {
                     setupRemoteCarTaskView(mMapsCard);
                     setupContentObserversForTos();
                 }
-
-                // Receiver registrieren
-                ContextCompat.registerReceiver(this, mNavUiModeReceiver,
-                        new IntentFilter(CarLauncherUtils.ACTION_NAVIGATION_UI_MODE_CHANGED),
-                        ContextCompat.RECEIVER_EXPORTED);
-                mNavUiModeReceiverRegistered = true;
-
-                // UI-Zustand initial ohne Broadcast setzen
-                //updateInternalUiState(mNavUiMode);
-				syncNavUiModeToService(mNavUiMode);
             }
         } else {
             getSupportFragmentManager().beginTransaction().replace(R.id.maps_card,
@@ -223,6 +225,10 @@ public class CarLauncher extends FragmentActivity {
 
     // Hilfsmethode, um die UI zu updaten ohne eine Nachrichtenschleife zu triggern
 	private void syncNavUiModeToService(String mode) {
+		if (!isValidNavUiMode(mode)) {
+			return;
+		}
+
 		Intent intent = new Intent(
 				"com.asiks.camper.navigator.action.SET_MODE");
 
@@ -350,10 +356,6 @@ public class CarLauncher extends FragmentActivity {
 	}
 
 	private void requestNavUiMode(String mode) {
-		if (!isValidNavUiMode(mode)) {
-			return;
-		}
-
 		syncNavUiModeToService(mode);
 	}
 
@@ -366,7 +368,7 @@ public class CarLauncher extends FragmentActivity {
             }
         }
     };*/
-
+/*	
     private String resolveInitialNavUiMode(Intent intent) {
         String requestedMode = intent != null
                 ? intent.getStringExtra(CarLauncherUtils.EXTRA_NAVIGATION_UI_MODE)
@@ -377,7 +379,7 @@ public class CarLauncher extends FragmentActivity {
         }
         return CarLauncherUtils.readPersistedNavigationUiMode(this);
     }
-
+*/
     @Override
     protected void onPause() {
         super.onPause();
@@ -501,10 +503,6 @@ public class CarLauncher extends FragmentActivity {
     private void bringToForeground() {
         if (mCarLauncherTaskId != INVALID_TASK_ID) {
             mActivityManager.moveTaskToFront(mCarLauncherTaskId,  /* flags= */ 0);
-
-            // KORREKTUR: Wenn der Launcher aktiv in den Vordergrund kommt (Home-Button),
-            // schalte in-place zurück auf den HOME Modus (Splitscreen).
-            applyNavUiMode(CarLauncherUtils.NAVIGATION_UI_MODE_HOME);
         }
     }
 
