@@ -63,7 +63,6 @@ import com.android.wm.shell.taskview.TaskView;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Set;
-import java.util.stream.Stream;
 
 /**
  * Basic Launcher for Android Automotive which demonstrates the use of {@link TaskView} to host
