@@ -242,15 +242,7 @@ public class CarLauncher extends FragmentActivity {
 
 		sendBroadcast(intent);
 	}
-/*
-    private void updateInternalUiState(String mode) {
-        boolean fullscreen = CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mode);
-        View audioCard = findViewById(R.id.bottom_card);
-        if (audioCard != null) {
-            audioCard.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
-        }
-    }
-*/
+
 	@Override
 	protected void onNewIntent(Intent intent) {
 		super.onNewIntent(intent);
@@ -359,27 +351,6 @@ public class CarLauncher extends FragmentActivity {
 		syncNavUiModeToService(mode);
 	}
 
-    /*private final BroadcastReceiver mShutdownReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (Intent.ACTION_SHUTDOWN.equals(intent.getAction())) {
-                CarLauncherUtils.persistNavigationUiMode(context, mNavUiMode);
-                Log.d(TAG, "Persisted navigation UI mode to LUM on shutdown: " + mNavUiMode);
-            }
-        }
-    };*/
-/*	
-    private String resolveInitialNavUiMode(Intent intent) {
-        String requestedMode = intent != null
-                ? intent.getStringExtra(CarLauncherUtils.EXTRA_NAVIGATION_UI_MODE)
-                : null;
-        if (CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(requestedMode)
-                || CarLauncherUtils.NAVIGATION_UI_MODE_HOME.equals(requestedMode)) {
-            return requestedMode;
-        }
-        return CarLauncherUtils.readPersistedNavigationUiMode(this);
-    }
-*/
     @Override
     protected void onPause() {
         super.onPause();
@@ -467,14 +438,7 @@ public class CarLauncher extends FragmentActivity {
                 }
             }
         }
-        boolean fullscreen = CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode);
-        Stream.of(R.id.bottom_card).forEach(resId -> {
-            View container = findViewById(resId);
-            if (container == null) return;
-            boolean isRequired = !fullscreen && mHomeCardModules.stream()
-                    .anyMatch(m -> m.getCardResId() == resId);
-            container.setVisibility(isRequired ? View.VISIBLE : View.GONE);
-        });
+		
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         for (HomeCardModule cardModule : mHomeCardModules) {
             transaction.replace(cardModule.getCardResId(), cardModule.getCardView().getFragment());
