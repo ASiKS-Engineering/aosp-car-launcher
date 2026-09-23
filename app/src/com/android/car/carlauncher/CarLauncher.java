@@ -208,7 +208,8 @@ public class CarLauncher extends FragmentActivity {
                 mNavUiModeReceiverRegistered = true;
 
                 // UI-Zustand initial ohne Broadcast setzen
-                updateInternalUiState(mNavUiMode);
+                //updateInternalUiState(mNavUiMode);
+				syncNavUiModeToService(mNavUiMode);
             }
         } else {
             getSupportFragmentManager().beginTransaction().replace(R.id.maps_card,
@@ -221,6 +222,21 @@ public class CarLauncher extends FragmentActivity {
     }
 
     // Hilfsmethode, um die UI zu updaten ohne eine Nachrichtenschleife zu triggern
+	private void syncNavUiModeToService(String mode) {
+		Intent intent = new Intent(
+				"com.asiks.camper.navigator.action.SET_MODE");
+
+		intent.putExtra(
+				"com.asiks.camper.navigator.extra.MODE",
+				mode);
+
+		intent.putExtra(
+				"com.asiks.camper.navigator.extra.APPLY_SCREEN_TRANSITION",
+				false);
+
+		sendBroadcast(intent);
+	}
+/*
     private void updateInternalUiState(String mode) {
         boolean fullscreen = CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mode);
         View audioCard = findViewById(R.id.bottom_card);
@@ -228,7 +244,7 @@ public class CarLauncher extends FragmentActivity {
             audioCard.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
         }
     }
-
+*/
 	@Override
 	protected void onNewIntent(Intent intent) {
 		super.onNewIntent(intent);
@@ -307,14 +323,12 @@ public class CarLauncher extends FragmentActivity {
 			return;
 		}
 
-		if (mode.equals(mNavUiMode)) {
-			updateNavigationLayerUi();
-			return;
-		}
-
 		Log.d(TAG, "Navigation UI mode -> " + mode);
 
 		mNavUiMode = mode;
+
+		CarLauncherUtils.persistNavigationUiMode(this, mode);
+
 		updateNavigationLayerUi();
 	}
 
@@ -340,10 +354,7 @@ public class CarLauncher extends FragmentActivity {
 			return;
 		}
 
-		mNavUiMode = mode;
-		updateNavigationLayerUi();
-
-		CarLauncherUtils.broadcastNavigationUiMode(this, mode);
+		syncNavUiModeToService(mode);
 	}
 
     /*private final BroadcastReceiver mShutdownReceiver = new BroadcastReceiver() {
