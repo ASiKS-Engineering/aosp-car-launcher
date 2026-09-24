@@ -93,6 +93,7 @@ public class CarLauncher extends FragmentActivity {
     private View mMapsPlaceholder;
     private String mNavUiMode = CarLauncherUtils.NAVIGATION_UI_MODE_HOME;
     private boolean mNavUiModeReceiverRegistered;
+    private boolean mShutdownReceiverRegistered;
 
     @VisibleForTesting
     CarLauncherViewModel mCarLauncherViewModel;
@@ -132,8 +133,15 @@ public class CarLauncher extends FragmentActivity {
         public void onReceive(Context context, Intent intent) {
             String mode = intent.getStringExtra(CarLauncherUtils.EXTRA_NAVIGATION_UI_MODE);
             if (mode != null) {
-                applyNavUiMode(mode);
+                applyNavUiMode(mode, false);
             }
+        }
+    };
+
+    private final BroadcastReceiver mShutdownReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            persistCurrentNavUiMode();
         }
     };
 
@@ -156,6 +164,8 @@ public class CarLauncher extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.i(TAG, "onCreate: launcher starting, restoring nav UI mode");
 
         // Fenster-Transparenz
         getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
@@ -192,6 +202,7 @@ public class CarLauncher extends FragmentActivity {
 
                 // Load LUm mode
 				String persistedMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
+                Log.i(TAG, "Restored persisted nav UI mode: " + persistedMode);
 				mNavUiMode = persistedMode;
 				updateNavigationLayerUi();
 
@@ -204,8 +215,14 @@ public class CarLauncher extends FragmentActivity {
 						ContextCompat.RECEIVER_EXPORTED);
 
 				mNavUiModeReceiverRegistered = true;
-				
-				syncNavUiModeToService(mNavUiMode);
+        ContextCompat.registerReceiver(
+            this,
+            mShutdownReceiver,
+            new IntentFilter(Intent.ACTION_SHUTDOWN),
+            ContextCompat.RECEIVER_NOT_EXPORTED);
+
+        mShutdownReceiverRegistered = true;
+        CarLauncherUtils.notifyNavigatorMode(this, mNavUiMode);
 
                 if (mMapsCard != null) {
                     setupRemoteCarTaskView(mMapsCard);
@@ -223,23 +240,12 @@ public class CarLauncher extends FragmentActivity {
     }
 
     // Hilfsmethode, um die UI zu updaten ohne eine Nachrichtenschleife zu triggern
-	private void syncNavUiModeToService(String mode) {
+    private void notifyNavigatorMode(String mode) {
 		if (!isValidNavUiMode(mode)) {
 			return;
 		}
 
-		Intent intent = new Intent(
-				"com.asiks.camper.navigator.action.SET_MODE");
-
-		intent.putExtra(
-				"com.asiks.camper.navigator.extra.MODE",
-				mode);
-
-		intent.putExtra(
-				"com.asiks.camper.navigator.extra.APPLY_SCREEN_TRANSITION",
-				false);
-
-		sendBroadcast(intent);
+        CarLauncherUtils.notifyNavigatorMode(this, mode);
 	}
 
 	@Override
@@ -252,7 +258,7 @@ public class CarLauncher extends FragmentActivity {
 				: null;
 
 		if (requestedMode != null) {
-			applyNavUiMode(requestedMode);
+            applyNavUiMode(requestedMode, true);
 		}
 	}
 
@@ -315,8 +321,9 @@ public class CarLauncher extends FragmentActivity {
      * home cards and notifies CamperNavigator so both UIs stay in lock-step. The embedded nav
      * instance itself is never restarted. Mode is persisted to LUM only at system shutdown.
      */
-	private void applyNavUiMode(String mode) {
+    private void applyNavUiMode(String mode, boolean notifyNavigator) {
 		if (!isValidNavUiMode(mode)) {
+            Log.w(TAG, "Ignoring invalid nav UI mode request: " + mode);
 			return;
 		}
 
@@ -324,9 +331,11 @@ public class CarLauncher extends FragmentActivity {
 
 		mNavUiMode = mode;
 
-		CarLauncherUtils.persistNavigationUiMode(this, mode);
-
 		updateNavigationLayerUi();
+
+        if (notifyNavigator) {
+            notifyNavigatorMode(mode);
+        }
 	}
 
 	private void updateNavigationLayerUi() {
@@ -346,8 +355,9 @@ public class CarLauncher extends FragmentActivity {
 				|| CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mode);
 	}
 
-	private void requestNavUiMode(String mode) {
-		syncNavUiModeToService(mode);
+    private void persistCurrentNavUiMode() {
+        Log.i(TAG, "Persisting nav UI mode: " + mNavUiMode);
+        CarLauncherUtils.persistNavigationUiMode(this, mNavUiMode);
 	}
 
     @Override
@@ -365,11 +375,17 @@ public class CarLauncher extends FragmentActivity {
         }
 
         TaskStackChangeListeners.getInstance().unregisterTaskStackListener(mTaskStackListener);
-        //if (mNavUiModeReceiverRegistered) {
-        //    unregisterReceiver(mNavUiModeReceiver);
-        //    unregisterReceiver(mShutdownReceiver);
-        //    mNavUiModeReceiverRegistered = false;
-        //}
+        if (mNavUiModeReceiverRegistered) {
+            unregisterReceiver(mNavUiModeReceiver);
+            mNavUiModeReceiverRegistered = false;
+        }
+        if (mShutdownReceiverRegistered) {
+            unregisterReceiver(mShutdownReceiver);
+            mShutdownReceiverRegistered = false;
+        }
+        if (isFinishing()) {
+            persistCurrentNavUiMode();
+        }
         unregisterTosContentObserver();
         release();
     }
@@ -475,8 +491,12 @@ public class CarLauncher extends FragmentActivity {
                 ? CarLauncherUtils.getSmallCanvasOptimizedMapIntent(this)
                 : CarLauncherUtils.getMapsIntent(this);
 
+        Log.d(TAG, "Building maps intent with nav UI mode=" + mNavUiMode
+            + ", smallCanvasOptimized=" + mUseSmallCanvasOptimizedMap);
+
         // Don't want to show this Activity in Recents.
         mapIntent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        mapIntent.putExtra(CarLauncherUtils.EXTRA_NAVIGATION_UI_MODE, mNavUiMode);
         return mapIntent;
     }
 

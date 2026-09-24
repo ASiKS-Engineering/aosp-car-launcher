@@ -39,6 +39,7 @@ public class CarLauncherUtils {
 
     private static final String TAG = "CarLauncherUtils";
     private static final String ACTION_APP_GRID = "com.android.car.carlauncher.ACTION_APP_GRID";
+    private static final String NAVIGATOR_PACKAGE = "com.example.campernavigator";
     // This action/extra pair is intentionally not tied to a specific component: both
     // CarLauncher (to show/hide its home cards) and CamperNavigator (to switch its own UI)
     // register a dynamic receiver for it, so a single broadcast from a system bar button
@@ -96,16 +97,17 @@ public class CarLauncherUtils {
     }
 
 	public static void requestNavigationUiMode(Context context, String mode) {
-		Intent intent = new Intent(
-				"com.asiks.camper.navigator.action.SET_MODE");
-		intent.putExtra(
-				"com.asiks.camper.navigator.extra.MODE",
-				mode);
-		intent.putExtra(
-				"com.asiks.camper.navigator.extra.APPLY_SCREEN_TRANSITION",
-				true);
-		context.sendBroadcast(intent);
+        Intent intent = new Intent(ACTION_NAVIGATION_UI_MODE_CHANGED);
+        intent.putExtra(EXTRA_NAVIGATION_UI_MODE, mode);
+        context.sendBroadcast(intent);
 	}
+
+        public static void notifyNavigatorMode(Context context, String mode) {
+        Intent intent = new Intent(ACTION_NAVIGATION_UI_MODE_CHANGED);
+        intent.setPackage(NAVIGATOR_PACKAGE);
+        intent.putExtra(EXTRA_NAVIGATION_UI_MODE, mode);
+        context.sendBroadcast(intent);
+        }
 
     public static boolean isCamperNavigatorAvailable(Context context) {
         Intent intent = getCamperNavigatorIntent(context);
