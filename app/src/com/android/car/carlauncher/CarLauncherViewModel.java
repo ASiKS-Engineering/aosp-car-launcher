@@ -127,6 +127,17 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
         return mRemoteCarTaskView;
     }
 
+    /** Releases the currently hosted task view without creating a replacement. */
+    public void releaseRemoteCarTaskView() {
+        if (mRemoteCarTaskView != null && mRemoteCarTaskView.getValue() != null) {
+            mRemoteCarTaskView.getValue().release();
+            mRemoteCarTaskView.setValue(null);
+        }
+        if (mHostLifecycle != null) {
+            mHostLifecycle.hostDisappeared();
+        }
+    }
+
     @VisibleForTesting
     Intent getMapsIntent() {
         return mMapsIntent;
