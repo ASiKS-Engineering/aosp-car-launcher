@@ -102,13 +102,14 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
      * Initialize the remote car task view with the maps intent.
      */
     public void initializeRemoteCarTaskView(@NonNull Intent mapsIntent) {
-        if (DEBUG) {
-            Log.d(TAG, "Maps intent in the task view = " + mapsIntent.getComponent());
-        }
+        Log.i(TAG, "initializeRemoteCarTaskView: component=" + mapsIntent.getComponent()
+                + ", existingValue="
+                + (mRemoteCarTaskView == null ? null : mRemoteCarTaskView.getValue()));
         mMapsIntent = mapsIntent;
         if (mRemoteCarTaskView != null && mRemoteCarTaskView.getValue() != null) {
             // Release the remote car task view instance if it exists since otherwise there could
             // be a memory leak
+            Log.i(TAG, "initializeRemoteCarTaskView: releasing previous taskView before recreate");
             mRemoteCarTaskView.getValue().release();
         }
         mRemoteCarTaskView = new MutableLiveData<>(/* value= */ null);
@@ -129,6 +130,8 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
 
     /** Releases the currently hosted task view without creating a replacement. */
     public void releaseRemoteCarTaskView() {
+        Log.i(TAG, "releaseRemoteCarTaskView: currentValue="
+                + (mRemoteCarTaskView == null ? null : mRemoteCarTaskView.getValue()));
         if (mRemoteCarTaskView != null && mRemoteCarTaskView.getValue() != null) {
             mRemoteCarTaskView.getValue().release();
             mRemoteCarTaskView.setValue(null);
@@ -174,6 +177,7 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
     @Override
     public void onStop(@NonNull LifecycleOwner owner) {
         DefaultLifecycleObserver.super.onStop(owner);
+        Log.i(TAG, "CarLauncherViewModel.onStop: hostDisappeared");
         mHostLifecycle.hostDisappeared();
     }
 
@@ -196,6 +200,7 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
     private final Consumer<Intent> mNewIntentConsumer = new Consumer<Intent>() {
         @Override
         public void accept(Intent intent) {
+            Log.i(TAG, "CarLauncherViewModel.onNewIntent: hostAppeared, intent=" + intent);
             mHostLifecycle.hostAppeared();
         }
     };
@@ -211,34 +216,32 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
 
         @Override
         public void onTaskViewCreated(@NonNull ControlledRemoteCarTaskView taskView) {
-            if (DEBUG) {
-                Log.d(TAG, "MapsTaskView: onTaskViewCreated");
-            }
+            Log.i(TAG, "MapsTaskView.onTaskViewCreated: taskView=" + taskView);
             taskView.setBackgroundColor(Color.TRANSPARENT);
             mRemoteCarTaskView.setValue(taskView);
         }
 
         @Override
         public void onTaskViewInitialized() {
-            if (DEBUG) {
-                Log.d(TAG, "MapsTaskView: onTaskViewInitialized");
-            }
+            Log.i(TAG, "MapsTaskView.onTaskViewInitialized: taskView="
+                    + mRemoteCarTaskView.getValue());
         }
 
         @Override
         public void onTaskAppeared(@NonNull ActivityManager.RunningTaskInfo taskInfo) {
-            if (DEBUG) {
-                Log.d(TAG, "MapsTaskView: onTaskAppeared: taskId=" + taskInfo.taskId);
-            }
+            Log.i(TAG, "MapsTaskView.onTaskAppeared: taskId=" + taskInfo.taskId
+                    + ", visible=" + taskInfo.isVisible
+                    + ", displayId=" + taskInfo.displayId
+                    + ", baseIntent=" + taskInfo.baseIntent);
             // Always set transparent background when task is active to show the map
             mRemoteCarTaskView.getValue().setBackgroundColor(Color.TRANSPARENT);
         }
 
         @Override
         public void onTaskVanished(@NonNull ActivityManager.RunningTaskInfo taskInfo) {
-            if (DEBUG) {
-                Log.d(TAG, "MapsTaskView: onTaskVanished: taskId=" + taskInfo.taskId);
-            }
+            Log.i(TAG, "MapsTaskView.onTaskVanished: taskId=" + taskInfo.taskId
+                    + ", visible=" + taskInfo.isVisible
+                    + ", displayId=" + taskInfo.displayId);
             // Do not manually restart here! It will steal the task when trying to go fullscreen.
             // setShouldAutoRestartOnTaskRemoval(true) in the config handles real crashes.
             if (mRemoteCarTaskView.getValue() != null) {
@@ -257,6 +260,8 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
 
         @Override
         public void onConnected(@NonNull CarTaskViewController carTaskViewController) {
+            Log.i(TAG, "CarTaskViewController.onConnected: controller=" + carTaskViewController
+                + ", mapsIntent=" + mMapsIntent);
             carTaskViewController.createControlledRemoteCarTaskView(
                     new ControlledRemoteCarTaskViewConfig.Builder()
                             .setActivityIntent(mMapsIntent)
@@ -268,6 +273,8 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
 
         @Override
         public void onDisconnected(@NonNull CarTaskViewController carTaskViewController) {
+            Log.i(TAG, "CarTaskViewController.onDisconnected: controller="
+                    + carTaskViewController);
             mRemoteCarTaskView.setValue(null);
         }
     }

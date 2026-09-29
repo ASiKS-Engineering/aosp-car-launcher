@@ -241,6 +241,7 @@ public class CarLauncher extends FragmentActivity {
             return;
         }
 
+        Log.i(TAG, "broadcastNavigationUiMode: mode=" + mode);
         CarLauncherUtils.requestNavigationUiMode(this, mode);
     }
 
@@ -273,13 +274,17 @@ public class CarLauncher extends FragmentActivity {
         LiveData<android.car.app.RemoteCarTaskView> taskViewSource =
                 mCarLauncherViewModel.getRemoteCarTaskView();
         if (taskViewSource == mObservedTaskViewSource) {
+            Log.d(TAG, "observeRemoteCarTaskView: same LiveData source, skip re-register");
             return;
         }
 
+        Log.i(TAG, "observeRemoteCarTaskView: attaching to new LiveData source");
         mObservedTaskViewSource = taskViewSource;
         taskViewSource.observe(this, taskView -> {
             ViewGroup container = findViewById(R.id.maps_card_container);
             if (taskView == null) {
+                Log.i(TAG, "RemoteCarTaskView observer: taskView=null, mode=" + mNavUiMode
+                        + ", container=" + container + ", embedded=" + mEmbeddedTaskView);
                 removeEmbeddedTaskView();
                 if (mMapsPlaceholder != null) {
                     mMapsPlaceholder.setVisibility(
@@ -290,16 +295,22 @@ public class CarLauncher extends FragmentActivity {
             }
 
             if (container == null) {
+                Log.w(TAG, "RemoteCarTaskView observer: maps_card_container is null");
                 return;
             }
 
             if (mEmbeddedTaskView == taskView && taskView.getParent() == container) {
+                Log.d(TAG, "RemoteCarTaskView observer: taskView already attached, keep state");
                 if (mMapsPlaceholder != null) {
                     mMapsPlaceholder.setVisibility(View.GONE);
                 }
                 return;
             }
 
+            Log.i(TAG, "RemoteCarTaskView observer: attaching taskView=" + taskView
+                    + ", oldEmbedded=" + mEmbeddedTaskView
+                    + ", parent=" + taskView.getParent()
+                    + ", mode=" + mNavUiMode);
             removeEmbeddedTaskView();
 
             if (taskView.getParent() != null) {
@@ -315,6 +326,11 @@ public class CarLauncher extends FragmentActivity {
             taskView.setZOrderMediaOverlay(true);
             taskView.setObscuredTouchRegion(null);
 
+            Log.i(TAG, "RemoteCarTaskView attached: visible=" + taskView.getVisibility()
+                    + ", parent=" + taskView.getParent()
+                    + ", placeholderVisible="
+                    + (mMapsPlaceholder != null && mMapsPlaceholder.getVisibility() == View.VISIBLE));
+
             if (mMapsPlaceholder != null) {
                 mMapsPlaceholder.setVisibility(View.GONE);
             }
@@ -322,19 +338,29 @@ public class CarLauncher extends FragmentActivity {
     }
 
     private void syncEmbeddedNavigationHost() {
+        Log.i(TAG, "syncEmbeddedNavigationHost: mode=" + mNavUiMode
+                + ", mapsCard=" + mMapsCard
+                + ", viewModel=" + mCarLauncherViewModel
+                + ", embedded=" + mEmbeddedTaskView);
         if (mMapsCard == null) {
             return;
         }
 
         if (CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode)) {
+            Log.i(TAG, "syncEmbeddedNavigationHost: tearing down embedded navigation for FULLSCREEN");
             tearDownEmbeddedNavigation();
             return;
         }
 
+        Log.i(TAG, "syncEmbeddedNavigationHost: ensuring embedded navigation for HOME");
         ensureEmbeddedNavigation();
     }
 
     private void ensureEmbeddedNavigation() {
+        Log.i(TAG, "ensureEmbeddedNavigation: currentValue="
+                + (mCarLauncherViewModel == null
+                        ? null
+                        : mCarLauncherViewModel.getRemoteCarTaskView().getValue()));
         if (mCarLauncherViewModel == null) {
             setupRemoteCarTaskView(mMapsCard);
         } else if (mCarLauncherViewModel.getRemoteCarTaskView().getValue() == null) {
@@ -348,6 +374,8 @@ public class CarLauncher extends FragmentActivity {
     }
 
     private void tearDownEmbeddedNavigation() {
+        Log.i(TAG, "tearDownEmbeddedNavigation: embedded=" + mEmbeddedTaskView
+                + ", viewModel=" + mCarLauncherViewModel);
         removeEmbeddedTaskView();
         if (mCarLauncherViewModel != null) {
             mCarLauncherViewModel.releaseRemoteCarTaskView();
@@ -362,6 +390,8 @@ public class CarLauncher extends FragmentActivity {
         if (mEmbeddedTaskView == null) {
             return;
         }
+        Log.i(TAG, "removeEmbeddedTaskView: removing=" + mEmbeddedTaskView
+                + ", parent=" + mEmbeddedTaskView.getParent());
         if (mEmbeddedTaskView.getParent() instanceof ViewGroup parent) {
             parent.removeView(mEmbeddedTaskView);
         }
@@ -389,7 +419,9 @@ public class CarLauncher extends FragmentActivity {
             return;
         }
 
-        Log.d(TAG, "Navigation UI mode -> " + mode);
+        Log.i(TAG, "applyNavUiMode: oldMode=" + mNavUiMode + ", newMode=" + mode
+                + ", notifyNavigator=" + notifyNavigator
+                + ", embedded=" + mEmbeddedTaskView);
 
         mNavUiMode = mode;
 
@@ -405,6 +437,10 @@ public class CarLauncher extends FragmentActivity {
     private void updateNavigationLayerUi() {
         boolean fullscreen =
                 CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode);
+
+        Log.i(TAG, "updateNavigationLayerUi: fullscreen=" + fullscreen
+            + ", bottomCard=" + findViewById(R.id.bottom_card)
+            + ", mapsPlaceholder=" + mMapsPlaceholder);
 
         View audioCard = findViewById(R.id.bottom_card);
         if (audioCard != null) {

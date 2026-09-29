@@ -97,17 +97,22 @@ public class CarLauncherUtils {
     }
 
 	public static void requestNavigationUiMode(Context context, String mode) {
+    Log.i(TAG, "requestNavigationUiMode: mode=" + mode
+        + ", callerPackage=" + context.getPackageName());
         Intent intent = new Intent(ACTION_NAVIGATION_UI_MODE_CHANGED);
         intent.putExtra(EXTRA_NAVIGATION_UI_MODE, mode);
         context.sendBroadcast(intent);
 	}
 
-        public static void notifyNavigatorMode(Context context, String mode) {
+    public static void notifyNavigatorMode(Context context, String mode) {
+    Log.i(TAG, "notifyNavigatorMode: mode=" + mode
+        + ", navigatorPackage=" + NAVIGATOR_PACKAGE
+        + ", callerPackage=" + context.getPackageName());
         Intent intent = new Intent(ACTION_NAVIGATION_UI_MODE_CHANGED);
         intent.setPackage(NAVIGATOR_PACKAGE);
         intent.putExtra(EXTRA_NAVIGATION_UI_MODE, mode);
         context.sendBroadcast(intent);
-        }
+    }
 
     public static boolean isCamperNavigatorAvailable(Context context) {
         Intent intent = getCamperNavigatorIntent(context);
