@@ -102,9 +102,10 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
      * Initialize the remote car task view with the maps intent.
      */
     public void initializeRemoteCarTaskView(@NonNull Intent mapsIntent) {
-        Log.i(TAG, "initializeRemoteCarTaskView: component=" + mapsIntent.getComponent()
-                + ", existingValue="
-                + (mRemoteCarTaskView == null ? null : mRemoteCarTaskView.getValue()));
+        Log.i(TAG, "initializeRemoteCarTaskView: build=" + CarLauncher.BUILD_MARKER
+                + ", component=" + mapsIntent.getComponent()
+                + ", hasExistingView="
+                + (mRemoteCarTaskView != null && mRemoteCarTaskView.getValue() != null));
         mMapsIntent = mapsIntent;
         if (mRemoteCarTaskView != null && mRemoteCarTaskView.getValue() != null) {
             // Release the remote car task view instance if it exists since otherwise there could
@@ -126,19 +127,6 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
 
     LiveData<RemoteCarTaskView> getRemoteCarTaskView() {
         return mRemoteCarTaskView;
-    }
-
-    /** Releases the currently hosted task view without creating a replacement. */
-    public void releaseRemoteCarTaskView() {
-        Log.i(TAG, "releaseRemoteCarTaskView: currentValue="
-                + (mRemoteCarTaskView == null ? null : mRemoteCarTaskView.getValue()));
-        if (mRemoteCarTaskView != null && mRemoteCarTaskView.getValue() != null) {
-            mRemoteCarTaskView.getValue().release();
-            mRemoteCarTaskView.setValue(null);
-        }
-        if (mHostLifecycle != null) {
-            mHostLifecycle.hostDisappeared();
-        }
     }
 
     @VisibleForTesting
@@ -216,15 +204,16 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
 
         @Override
         public void onTaskViewCreated(@NonNull ControlledRemoteCarTaskView taskView) {
-            Log.i(TAG, "MapsTaskView.onTaskViewCreated: taskView=" + taskView);
+            Log.i(TAG, "MapsTaskView.onTaskViewCreated: view="
+                    + System.identityHashCode(taskView));
             taskView.setBackgroundColor(Color.TRANSPARENT);
             mRemoteCarTaskView.setValue(taskView);
         }
 
         @Override
         public void onTaskViewInitialized() {
-            Log.i(TAG, "MapsTaskView.onTaskViewInitialized: taskView="
-                    + mRemoteCarTaskView.getValue());
+            Log.i(TAG, "MapsTaskView.onTaskViewInitialized: view="
+                    + System.identityHashCode(mRemoteCarTaskView.getValue()));
         }
 
         @Override
@@ -234,7 +223,9 @@ public final class CarLauncherViewModel extends ViewModel implements DefaultLife
                     + ", displayId=" + taskInfo.displayId
                     + ", baseIntent=" + taskInfo.baseIntent);
             // Always set transparent background when task is active to show the map
-            mRemoteCarTaskView.getValue().setBackgroundColor(Color.TRANSPARENT);
+            if (mRemoteCarTaskView.getValue() != null) {
+                mRemoteCarTaskView.getValue().setBackgroundColor(Color.TRANSPARENT);
+            }
         }
 
         @Override

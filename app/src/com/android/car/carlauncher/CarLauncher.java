@@ -80,6 +80,8 @@ import java.util.Set;
  */
 public class CarLauncher extends FragmentActivity {
     public static final String TAG = "CarLauncher";
+    /** Temporary debug marker; bump on every debug build to identify the running launcher. */
+    public static final String BUILD_MARKER = "NAVDBG-20261001-A";
     public static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
     private ActivityManager mActivityManager;
@@ -94,6 +96,8 @@ public class CarLauncher extends FragmentActivity {
     private View mMapsPlaceholder;
     private View mEmbeddedTaskView;
     private LiveData<android.car.app.RemoteCarTaskView> mObservedTaskViewSource;
+    /** True once the embedded task view has been requested; guards against double creation. */
+    private boolean mEmbeddedNavigationRequested;
     private String mNavUiMode = CarLauncherUtils.NAVIGATION_UI_MODE_HOME;
     private boolean mNavUiModeReceiverRegistered;
     private boolean mShutdownReceiverRegistered;
@@ -116,11 +120,10 @@ public class CarLauncher extends FragmentActivity {
                         + ", homeTaskVisible=" + homeTaskVisible + ", wasVisible=" + wasVisible);
             }
             if (!mUseSmallCanvasOptimizedMap
-                    && CarLauncherUtils.NAVIGATION_UI_MODE_HOME.equals(mNavUiMode)
                     && !homeTaskVisible
                     && getTaskViewTaskId() == task.taskId) {
-                // While HOME owns the embedded map surface, keep restart attempts inside the
-                // launcher-hosted task view instead of allowing a separate top-level activity.
+                // The embedded map task view lives for the whole launcher lifetime, so keep
+                // restart attempts inside the launcher-hosted task view.
                 bringToForeground();
             }
         }
@@ -167,7 +170,10 @@ public class CarLauncher extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.i(TAG, "onCreate: launcher starting, restoring nav UI mode");
+        Log.i(TAG, "onCreate: launcher starting, build=" + BUILD_MARKER
+                + ", apkBuildTime="
+                + new java.util.Date(new java.io.File(getApplicationInfo().sourceDir).lastModified())
+                + ", pid=" + android.os.Process.myPid());
 
         // Fenster-Transparenz
         getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
@@ -284,7 +290,11 @@ public class CarLauncher extends FragmentActivity {
             ViewGroup container = findViewById(R.id.maps_card_container);
             if (taskView == null) {
                 Log.i(TAG, "RemoteCarTaskView observer: taskView=null, mode=" + mNavUiMode
-                        + ", container=" + container + ", embedded=" + mEmbeddedTaskView);
+                        + ", embeddedAttached=" + (mEmbeddedTaskView != null));
+                if (mEmbeddedTaskView != null) {
+                    // The host went away (e.g. car service disconnect); allow re-creation.
+                    mEmbeddedNavigationRequested = false;
+                }
                 removeEmbeddedTaskView();
                 if (mMapsPlaceholder != null) {
                     mMapsPlaceholder.setVisibility(
@@ -337,52 +347,33 @@ public class CarLauncher extends FragmentActivity {
         });
     }
 
+    /**
+     * Makes sure exactly one embedded navigation task view exists. The task view is never torn
+     * down on a HOME/FULLSCREEN switch: a released task view leaves its task hidden and a newly
+     * created task view does not re-adopt it, which results in a black surface.
+     */
     private void syncEmbeddedNavigationHost() {
-        Log.i(TAG, "syncEmbeddedNavigationHost: mode=" + mNavUiMode
-                + ", mapsCard=" + mMapsCard
-                + ", viewModel=" + mCarLauncherViewModel
-                + ", embedded=" + mEmbeddedTaskView);
         if (mMapsCard == null) {
             return;
         }
 
-        if (CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode)) {
-            Log.i(TAG, "syncEmbeddedNavigationHost: tearing down embedded navigation for FULLSCREEN");
-            tearDownEmbeddedNavigation();
-            return;
-        }
-
-        Log.i(TAG, "syncEmbeddedNavigationHost: ensuring embedded navigation for HOME");
-        ensureEmbeddedNavigation();
-    }
-
-    private void ensureEmbeddedNavigation() {
-        Log.i(TAG, "ensureEmbeddedNavigation: currentValue="
-                + (mCarLauncherViewModel == null
-                        ? null
-                        : mCarLauncherViewModel.getRemoteCarTaskView().getValue()));
         if (mCarLauncherViewModel == null) {
+            Log.i(TAG, "syncEmbeddedNavigationHost: first creation, mode=" + mNavUiMode);
             setupRemoteCarTaskView(mMapsCard);
-        } else if (mCarLauncherViewModel.getRemoteCarTaskView().getValue() == null) {
+            mEmbeddedNavigationRequested = true;
+        } else if (!mEmbeddedNavigationRequested
+                && mCarLauncherViewModel.getRemoteCarTaskView().getValue() == null) {
+            Log.i(TAG, "syncEmbeddedNavigationHost: re-creation, mode=" + mNavUiMode);
             mCarLauncherViewModel.initializeRemoteCarTaskView(getMapsIntent());
+            mEmbeddedNavigationRequested = true;
             observeRemoteCarTaskView();
+        } else {
+            Log.d(TAG, "syncEmbeddedNavigationHost: keep existing task view, mode=" + mNavUiMode
+                    + ", embeddedAttached=" + (mEmbeddedTaskView != null));
         }
 
         if (mTosContentObserver == null) {
             setupContentObserversForTos();
-        }
-    }
-
-    private void tearDownEmbeddedNavigation() {
-        Log.i(TAG, "tearDownEmbeddedNavigation: embedded=" + mEmbeddedTaskView
-                + ", viewModel=" + mCarLauncherViewModel);
-        removeEmbeddedTaskView();
-        if (mCarLauncherViewModel != null) {
-            mCarLauncherViewModel.releaseRemoteCarTaskView();
-        }
-        mObservedTaskViewSource = null;
-        if (mMapsPlaceholder != null) {
-            mMapsPlaceholder.setVisibility(View.GONE);
         }
     }
 
@@ -419,13 +410,18 @@ public class CarLauncher extends FragmentActivity {
             return;
         }
 
-        Log.i(TAG, "applyNavUiMode: oldMode=" + mNavUiMode + ", newMode=" + mode
+        boolean modeChanged = !mode.equals(mNavUiMode);
+        Log.i(TAG, "applyNavUiMode: build=" + BUILD_MARKER + ", oldMode=" + mNavUiMode
+                + ", newMode=" + mode + ", changed=" + modeChanged
                 + ", notifyNavigator=" + notifyNavigator
-                + ", embedded=" + mEmbeddedTaskView);
+                + ", embeddedAttached=" + (mEmbeddedTaskView != null));
 
         mNavUiMode = mode;
 
-        updateNavigationLayerUi();
+        // Our own broadcast comes back through mNavUiModeReceiver; do not redo the work.
+        if (modeChanged) {
+            updateNavigationLayerUi();
+        }
 
         syncEmbeddedNavigationHost();
 
@@ -438,9 +434,7 @@ public class CarLauncher extends FragmentActivity {
         boolean fullscreen =
                 CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode);
 
-        Log.i(TAG, "updateNavigationLayerUi: fullscreen=" + fullscreen
-            + ", bottomCard=" + findViewById(R.id.bottom_card)
-            + ", mapsPlaceholder=" + mMapsPlaceholder);
+Log.i(TAG, "updateNavigationLayerUi: fullscreen=" + fullscreen);
 
         View audioCard = findViewById(R.id.bottom_card);
         if (audioCard != null) {
@@ -628,9 +622,6 @@ public class CarLauncher extends FragmentActivity {
 
                 if (mCarLauncherViewModel != null
                         && mCarLauncherViewModel.getRemoteCarTaskView().getValue() != null) {
-                    if (!CarLauncherUtils.NAVIGATION_UI_MODE_HOME.equals(mNavUiMode)) {
-                        return;
-                    }
                     // Reinitialize the remote car task view with the new maps intent
                     mCarLauncherViewModel.initializeRemoteCarTaskView(getMapsIntent());
                     observeRemoteCarTaskView();
