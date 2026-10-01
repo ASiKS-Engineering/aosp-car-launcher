@@ -81,7 +81,7 @@ import java.util.Set;
 public class CarLauncher extends FragmentActivity {
     public static final String TAG = "CarLauncher";
     /** Temporary debug marker; bump on every debug build to identify the running launcher. */
-    public static final String BUILD_MARKER = "NAVDBG-20261001-A";
+    public static final String BUILD_MARKER = "NAVDBG-20261001-B";
     public static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
     private ActivityManager mActivityManager;
