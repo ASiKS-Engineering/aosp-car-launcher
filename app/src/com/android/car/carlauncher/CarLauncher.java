@@ -32,6 +32,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Rect;
 import android.content.res.Configuration;
 import android.database.ContentObserver;
 import android.os.Bundle;
@@ -87,6 +88,9 @@ public class CarLauncher extends FragmentActivity {
     private ActivityManager mActivityManager;
     private Car mCar;
     private int mCarLauncherTaskId = INVALID_TASK_ID;
+    private int mFocusedTaskId = INVALID_TASK_ID;
+    private boolean mIgnoreNewIntent;
+    private static final long NAV_FADE_DURATION_MS = 300;
     private Set<HomeCardModule> mHomeCardModules;
 
     /** Set to {@code true} once we've logged that the Activity is fully drawn. */
@@ -94,7 +98,7 @@ public class CarLauncher extends FragmentActivity {
     private boolean mUseSmallCanvasOptimizedMap;
     private ViewGroup mMapsCard;
     private View mMapsPlaceholder;
-    private View mEmbeddedTaskView;
+    private android.car.app.RemoteCarTaskView mEmbeddedTaskView;
     private LiveData<android.car.app.RemoteCarTaskView> mObservedTaskViewSource;
     /** True once the embedded task view has been requested; guards against double creation. */
     private boolean mEmbeddedNavigationRequested;
@@ -110,6 +114,14 @@ public class CarLauncher extends FragmentActivity {
     private final TaskStackListener mTaskStackListener = new TaskStackListener() {
         @Override
         public void onTaskFocusChanged(int taskId, boolean focused) {
+            if (focused) {
+                mFocusedTaskId = taskId;
+            }
+        }
+
+        @Override
+        public void onTaskMovedToFront(ActivityManager.RunningTaskInfo taskInfo) {
+            mFocusedTaskId = taskInfo.taskId;
         }
 
         @Override
@@ -207,12 +219,17 @@ public class CarLauncher extends FragmentActivity {
             if (!UserHelperLite.isHeadlessSystemUser(getUserId())) {
                 mMapsCard = findViewById(R.id.maps_card);
                 mMapsPlaceholder = findViewById(R.id.maps_placeholder_text);
+                View audioCardView = findViewById(R.id.bottom_card);
+                if (audioCardView != null) {
+                    audioCardView.addOnLayoutChangeListener(
+                            (v, l, t, r, b, ol, ot, or, ob) -> updateMapObscuredTouchRegion());
+                }
 
                 // Load LUm mode
                 String persistedMode = CarLauncherUtils.readPersistedNavigationUiMode(this);
                 Log.i(TAG, "Restored persisted nav UI mode: " + persistedMode);
                 mNavUiMode = persistedMode;
-                updateNavigationLayerUi();
+                updateNavigationLayerUi(false);
 
                 ContextCompat.registerReceiver(
                         this,
@@ -253,16 +270,58 @@ public class CarLauncher extends FragmentActivity {
 
     @Override
     protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        setIntent(intent);
-
         String requestedMode = intent != null
                 ? intent.getStringExtra(CarLauncherUtils.EXTRA_NAVIGATION_UI_MODE)
                 : null;
 
+        // Home/Navi pressed while already showing that mode: do nothing (no task reorder).
+        mIgnoreNewIntent = requestedMode != null
+                && requestedMode.equals(mNavUiMode)
+                && isLauncherFocused();
+
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        if (mIgnoreNewIntent) {
+            Log.i(TAG, "onNewIntent: ignoring redundant request, mode=" + requestedMode);
+            return;
+        }
+
         if (requestedMode != null) {
             applyNavUiMode(requestedMode, true);
         }
+    }
+
+    /**
+     * The map task view makes its whole area pass through to the navigator window below, so the
+     * audio card on top of it must be added back as touchable launcher area.
+     */
+    private void updateMapObscuredTouchRegion() {
+        if (mEmbeddedTaskView == null) {
+            return;
+        }
+        View card = findViewById(R.id.bottom_card);
+        boolean cardTouchable = card != null
+                && card.getVisibility() == View.VISIBLE
+                && card.getWidth() > 0
+                && !CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode);
+        if (cardTouchable) {
+            int[] loc = new int[2];
+            card.getLocationInWindow(loc);
+            mEmbeddedTaskView.setObscuredTouchRect(new Rect(
+                    loc[0], loc[1], loc[0] + card.getWidth(), loc[1] + card.getHeight()));
+        } else {
+            mEmbeddedTaskView.setObscuredTouchRegion(null);
+        }
+        // Insets are only recomputed on a traversal.
+        mEmbeddedTaskView.requestLayout();
+    }
+
+    private boolean isLauncherFocused() {
+        if (mFocusedTaskId == INVALID_TASK_ID) {
+            return false;
+        }
+        return mFocusedTaskId == mCarLauncherTaskId || mFocusedTaskId == getTaskViewTaskId();
     }
 
     private void setupRemoteCarTaskView(ViewGroup parent) {
@@ -271,7 +330,11 @@ public class CarLauncher extends FragmentActivity {
                 .get(CarLauncherViewModel.class);
 
         getLifecycle().addObserver(mCarLauncherViewModel);
-        addOnNewIntentListener(mCarLauncherViewModel.getNewIntentListener());
+        addOnNewIntentListener(intent -> {
+            if (!mIgnoreNewIntent) {
+                mCarLauncherViewModel.getNewIntentListener().accept(intent);
+            }
+        });
 
         observeRemoteCarTaskView();
     }
@@ -334,7 +397,7 @@ public class CarLauncher extends FragmentActivity {
             taskView.setVisibility(View.VISIBLE);
             taskView.setZOrderOnTop(false);
             taskView.setZOrderMediaOverlay(true);
-            taskView.setObscuredTouchRegion(null);
+            updateMapObscuredTouchRegion();
 
             Log.i(TAG, "RemoteCarTaskView attached: visible=" + taskView.getVisibility()
                     + ", parent=" + taskView.getParent()
@@ -420,7 +483,7 @@ public class CarLauncher extends FragmentActivity {
 
         // Our own broadcast comes back through mNavUiModeReceiver; do not redo the work.
         if (modeChanged) {
-            updateNavigationLayerUi();
+            updateNavigationLayerUi(true);
         }
 
         syncEmbeddedNavigationHost();
@@ -430,7 +493,7 @@ public class CarLauncher extends FragmentActivity {
         }
     }
 
-    private void updateNavigationLayerUi() {
+    private void updateNavigationLayerUi(boolean animate) {
         boolean fullscreen =
                 CarLauncherUtils.NAVIGATION_UI_MODE_FULLSCREEN.equals(mNavUiMode);
 
@@ -438,8 +501,20 @@ Log.i(TAG, "updateNavigationLayerUi: fullscreen=" + fullscreen);
 
         View audioCard = findViewById(R.id.bottom_card);
         if (audioCard != null) {
-            audioCard.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
+            audioCard.animate().cancel();
+            if (!animate) {
+                audioCard.setAlpha(1f);
+                audioCard.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
+            } else if (fullscreen) {
+                audioCard.animate().alpha(0f).setDuration(NAV_FADE_DURATION_MS)
+                        .withEndAction(() -> audioCard.setVisibility(View.GONE)).start();
+            } else {
+                audioCard.setAlpha(0f);
+                audioCard.setVisibility(View.VISIBLE);
+                audioCard.animate().alpha(1f).setDuration(NAV_FADE_DURATION_MS).start();
+            }
         }
+        updateMapObscuredTouchRegion();
 
         initializeCards();
     }
