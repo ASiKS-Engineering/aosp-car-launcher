@@ -56,7 +56,6 @@
         <item>com.android.car.trust</item>
         <item>com.google.android.car.diagnosticrecorder</item>
         <item>com.google.android.car.diskwriteapp</item>
-        <item>com.android.documentsui</item>
         <item>com.google.android.car.flashapp</item>
         <item>com.android.gallery3d</item>
         <item>com.google.android.car.garagemode.testapp</item>
