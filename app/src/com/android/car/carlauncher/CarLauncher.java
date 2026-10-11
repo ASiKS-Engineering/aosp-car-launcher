@@ -44,6 +44,8 @@ import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.Interpolator;
+import android.view.animation.LinearInterpolator;
 
 import androidx.collection.ArraySet;
 import androidx.core.content.ContextCompat;
@@ -91,6 +93,7 @@ public class CarLauncher extends FragmentActivity {
     private int mFocusedTaskId = INVALID_TASK_ID;
     private boolean mIgnoreNewIntent;
     private static final long NAV_FADE_DURATION_MS = 300;
+    private static final Interpolator NAV_FADE_INTERPOLATOR = new LinearInterpolator();
     private Set<HomeCardModule> mHomeCardModules;
 
     /** Set to {@code true} once we've logged that the Activity is fully drawn. */
@@ -500,23 +503,51 @@ public class CarLauncher extends FragmentActivity {
 Log.i(TAG, "updateNavigationLayerUi: fullscreen=" + fullscreen);
 
         View audioCard = findViewById(R.id.bottom_card);
+        boolean fading = false;
         if (audioCard != null) {
             audioCard.animate().cancel();
             if (!animate) {
                 audioCard.setAlpha(1f);
                 audioCard.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
-            } else if (fullscreen) {
-                audioCard.animate().alpha(0f).setDuration(NAV_FADE_DURATION_MS)
-                        .withEndAction(() -> audioCard.setVisibility(View.GONE)).start();
             } else {
-                audioCard.setAlpha(0f);
-                audioCard.setVisibility(View.VISIBLE);
-                audioCard.animate().alpha(1f).setDuration(NAV_FADE_DURATION_MS).start();
+                fadeAudioCard(audioCard, fullscreen);
+                fading = true;
             }
         }
-        updateMapObscuredTouchRegion();
+        // While fading, the touch region follows the card's visibility through its layout
+        // listener. Re-laying out the map task view while the card is visible makes the card
+        // drop out for a frame.
+        if (!fading) {
+            updateMapObscuredTouchRegion();
+        }
 
         initializeCards();
+    }
+
+    /**
+     * Fades the audio card out (fullscreen) or in (home). An interrupted fade continues from the
+     * current alpha instead of restarting.
+     */
+    private void fadeAudioCard(View audioCard, boolean fadeOut) {
+        float target = fadeOut ? 0f : 1f;
+        if (!fadeOut && audioCard.getVisibility() != View.VISIBLE) {
+            audioCard.setAlpha(0f);
+            audioCard.setVisibility(View.VISIBLE);
+        }
+        float distance = Math.abs(target - audioCard.getAlpha());
+        if (distance == 0f) {
+            audioCard.setVisibility(fadeOut ? View.GONE : View.VISIBLE);
+            return;
+        }
+        audioCard.animate().alpha(target)
+                .setDuration((long) (NAV_FADE_DURATION_MS * distance))
+                .setInterpolator(NAV_FADE_INTERPOLATOR)
+                .withEndAction(() -> {
+                    if (fadeOut) {
+                        audioCard.setVisibility(View.GONE);
+                    }
+                })
+                .start();
     }
 
     private boolean isValidNavUiMode(String mode) {
