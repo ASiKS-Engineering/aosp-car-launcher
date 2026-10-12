@@ -40,9 +40,11 @@ import android.os.Handler;
 import android.os.UserManager;
 import android.provider.Settings;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
@@ -62,6 +64,8 @@ import com.android.car.carlauncher.homescreen.audio.dialer.InCallIntentRouter;
 import com.android.car.carlauncher.homescreen.audio.media.MediaLaunchRouter;
 import com.android.car.carlauncher.taskstack.TaskStackChangeListeners;
 import com.android.car.internal.common.UserHelperLite;
+import com.android.car.ui.baselayout.Insets;
+import com.android.car.ui.baselayout.InsetsChangedListener;
 import com.android.wm.shell.taskview.TaskView;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -81,7 +85,7 @@ import java.util.Set;
  * ratio that does not meet Android compatibility definitions. Developers should work with content
  * owners to ensure content renders correctly when extending or emulating this class.
  */
-public class CarLauncher extends FragmentActivity {
+public class CarLauncher extends FragmentActivity implements InsetsChangedListener {
     public static final String TAG = "CarLauncher";
     /** Temporary debug marker; bump on every debug build to identify the running launcher. */
     public static final String BUILD_MARKER = "NAVDBG-20261001-B";
@@ -93,6 +97,9 @@ public class CarLauncher extends FragmentActivity {
     private int mFocusedTaskId = INVALID_TASK_ID;
     private boolean mIgnoreNewIntent;
     private static final long NAV_FADE_DURATION_MS = 300;
+    private static final int AUDIO_CARD_MARGIN_DP = 16;
+    /** System bar insets of the window; the map ignores them, the audio card keeps clear. */
+    private final Rect mBarInsets = new Rect();
     private static final Interpolator NAV_FADE_INTERPOLATOR = new LinearInterpolator();
     private Set<HomeCardModule> mHomeCardModules;
 
@@ -207,6 +214,8 @@ public class CarLauncher extends FragmentActivity {
         } else {
             setContentView(R.layout.car_launcher);
         }
+        applyInsetsToAudioCard();
+        letContentRunBehindSystemBars();
 
         boolean isPassengerDisplay = isPassengerDisplay();
 
@@ -260,6 +269,75 @@ public class CarLauncher extends FragmentActivity {
         MediaLaunchRouter.getInstance().registerMediaLaunchHandler(mMediaMediaLaunchHandler);
         InCallIntentRouter.getInstance().registerInCallIntentHandler(mIntentHandler);
         initializeCards();
+    }
+
+    /**
+     * The window decor pads its content by the system bar insets and consumes them, so the map
+     * would end where the bars begin. Skip that padding and take the insets directly: the audio
+     * card keeps clear of the bars, the map runs behind them. The activity still implements
+     * {@link InsetsChangedListener} so that car-ui does not pad the content either.
+     */
+    private void letContentRunBehindSystemBars() {
+        View decorContent = ((ViewGroup) getWindow().getDecorView()).getChildAt(0);
+        if (decorContent == null) {
+            return;
+        }
+        decorContent.setOnApplyWindowInsetsListener((v, insets) -> {
+            android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
+            mBarInsets.set(bars.left, bars.top, bars.right, bars.bottom);
+            applyInsetsToAudioCard();
+            return insets;
+        });
+        decorContent.setPadding(0, 0, 0, 0);
+        decorContent.getViewTreeObserver().addOnGlobalLayoutListener(
+                () -> removeSystemBarOffsets(decorContent));
+        decorContent.requestApplyInsets();
+    }
+
+    private void removeSystemBarOffsets(View decorContent) {
+        boolean changed = false;
+        if (decorContent.getPaddingTop() != 0 || decorContent.getPaddingBottom() != 0) {
+            decorContent.setPadding(0, 0, 0, 0);
+            changed = true;
+        }
+        if (decorContent instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) decorContent;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View child = group.getChildAt(i);
+                if (child.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                    ViewGroup.MarginLayoutParams lp =
+                            (ViewGroup.MarginLayoutParams) child.getLayoutParams();
+                    if (lp.topMargin != 0 || lp.bottomMargin != 0) {
+                        lp.topMargin = 0;
+                        lp.bottomMargin = 0;
+                        changed = true;
+                    }
+                }
+            }
+        }
+        if (changed) {
+            decorContent.requestLayout();
+        }
+    }
+
+    @Override
+    public void onCarUiInsetsChanged(Insets insets) {
+        // Intentionally empty: the activity implements the listener so that car-ui does not pad
+        // the content. The system bar insets are read in letContentRunBehindSystemBars().
+    }
+
+    /** Keeps the audio card clear of the system bars while the map runs behind them. */
+    private void applyInsetsToAudioCard() {
+        View card = findViewById(R.id.bottom_card);
+        if (card == null) {
+            return;
+        }
+        int margin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                AUDIO_CARD_MARGIN_DP, getResources().getDisplayMetrics());
+        ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) card.getLayoutParams();
+        lp.setMargins(margin + mBarInsets.left, margin + mBarInsets.top,
+                margin + mBarInsets.right, margin + mBarInsets.bottom);
+        card.setLayoutParams(lp);
     }
 
     private void broadcastNavigationUiMode(String mode) {
