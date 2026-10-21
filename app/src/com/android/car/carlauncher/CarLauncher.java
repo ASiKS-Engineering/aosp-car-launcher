@@ -615,6 +615,7 @@ Log.i(TAG, "updateNavigationLayerUi: fullscreen=" + fullscreen);
         float distance = Math.abs(target - audioCard.getAlpha());
         if (distance == 0f) {
             audioCard.setVisibility(fadeOut ? View.GONE : View.VISIBLE);
+            updateMapObscuredTouchRegion();
             return;
         }
         audioCard.animate().alpha(target)
@@ -624,6 +625,10 @@ Log.i(TAG, "updateNavigationLayerUi: fullscreen=" + fullscreen);
                     if (fadeOut) {
                         audioCard.setVisibility(View.GONE);
                     }
+                    // A GONE card triggers no layout, so its layout listener never updates the
+                    // touch region; without this the invisible card keeps swallowing the
+                    // navigator's touches.
+                    updateMapObscuredTouchRegion();
                 })
                 .start();
     }

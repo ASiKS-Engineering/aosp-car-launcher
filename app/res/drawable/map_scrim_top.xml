@@ -1,8 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Darkens the map behind the transparent top system bar so its icons stay readable. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <gradient
-        android:angle="270"
-        android:startColor="#99000000"
-        android:endColor="#00000000" />
-</shape>
+<!--
+  Darkens the map behind the transparent top system bar, mirroring what the bottom bar gets from
+  the window's navigation bar scrim (flat band of the bar height) plus map_scrim_bottom (fade).
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#99000000"
+                android:endColor="#00000000" />
+        </shape>
+    </item>
+    <item
+        android:height="76dp"
+        android:gravity="top">
+        <shape android:shape="rectangle">
+            <solid android:color="#59000000" />
+        </shape>
+    </item>
+</layer-list>
